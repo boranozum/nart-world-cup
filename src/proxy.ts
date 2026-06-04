@@ -19,6 +19,11 @@ function isPublicPath(pathname: string): boolean {
 }
 
 export async function proxy(request: NextRequest) {
+  // The admin area has its own (separate) auth — skip player session handling.
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    return NextResponse.next();
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
