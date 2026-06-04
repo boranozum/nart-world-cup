@@ -1,23 +1,32 @@
+import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { OnboardingFlow } from './onboarding-flow';
 
-/**
- * First-login onboarding. Full flow (username + avatar setup → intro slideshow →
- * guided tour, per SPEC.md §9.1) is built next. This placeholder confirms the
- * authenticated user landed here.
- */
 export default async function OnboardingPage() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('username, onboarded_at, avatar_url')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  if (profile?.onboarded_at) redirect('/');
+
+  const suggested = (user.email?.split('@')[0] ?? '')
+    .replace(/[^a-zA-Z0-9_]/g, '')
+    .slice(0, 20);
+  const googleAvatar = (user.user_metadata?.avatar_url as string | undefined) ?? null;
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-6 text-center">
-      <h1 className="text-2xl font-semibold">Welcome to Nart World Cup 👋</h1>
-      <p className="max-w-md text-zinc-500">
-        Let&apos;s set up your profile. ({user?.email})
-      </p>
-      <p className="text-xs text-zinc-400">Onboarding flow coming next.</p>
-    </div>
+    <OnboardingFlow
+      email={user.email ?? ''}
+      suggestedUsername={suggested}
+      initialAvatarUrl={profile?.avatar_url ?? googleAvatar}
+    />
   );
 }
