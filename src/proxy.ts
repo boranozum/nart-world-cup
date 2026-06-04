@@ -1,16 +1,23 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { isAllowedEmail } from '@/lib/auth/domain';
 
 /**
  * Next.js 16 renamed the `middleware` convention to `proxy`.
- * Refreshes the Supabase auth session on every request so Server Components
- * always see a valid session.
- *
- * TODO: enforce auth gating here once login exists —
- *   - require an authenticated @technarts.com user for player routes
- *   - redirect unauthenticated users to /login
- *   - the /admin area uses its own (separate) auth, handled in that route group
+ * Refreshes the Supabase auth session on every request and gates player routes:
+ * an authenticated @technarts.com user is required, otherwise redirect to /login.
+ * The /admin area uses its own (separate) auth, handled within that route group.
  */
+
+// Paths that never require a player session.
+function isPublicPath(pathname: string): boolean {
+  return (
+    pathname === '/login' ||
+    pathname.startsWith('/auth') || // OAuth callback + sign-out
+    pathname.startsWith('/admin') // separate admin auth
+  );
+}
+
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -34,7 +41,25 @@ export async function proxy(request: NextRequest) {
   );
 
   // Touch the session so expired tokens get refreshed via Set-Cookie.
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { pathname } = request.nextUrl;
+
+  if (!isPublicPath(pathname)) {
+    if (!user) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      return NextResponse.redirect(url);
+    }
+    if (!isAllowedEmail(user.email)) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      url.search = '?error=domain';
+      return NextResponse.redirect(url);
+    }
+  }
 
   return response;
 }
