@@ -21,6 +21,8 @@ points in a single shared league; an admin runs the tournament.
   onboarding, animations, comments.
 - **`docs/SCHEMA.md`** — the canonical Postgres data model (entities, RLS policies,
   scoring computation). Read this before touching the database.
+- **`docs/DESIGN.md`** — the canonical design system (brand palette, typography,
+  motion, app shell). Read this before building UI; use design tokens, not hexes.
 
 When SPEC.md / SCHEMA.md and the code disagree, the docs are the source of truth — fix
 the code or update the docs deliberately, don't let them drift silently.
@@ -67,3 +69,8 @@ Single Next.js (App Router) app; Supabase provides Postgres, auth, realtime, sto
 - Store all times as UTC; render in the viewer's local zone. The per-match prediction
   lock is `kickoff - 5 minutes`.
 - Tailwind v4 (CSS-config, no `tailwind.config.js`). Animations use Framer Motion.
+- Design tokens (TechNarts navy `#2c397a` + orange `#f37123`) live in
+  `src/app/globals.css`; use semantic utilities (`bg-primary`, `text-accent`,
+  `bg-card`…), never hardcoded hexes. Fonts: Saira Condensed (display/scores) +
+  Hanken Grotesk (body). Light is the default theme; dark via the `.dark` class
+  (`next-themes`). See `docs/DESIGN.md`.
