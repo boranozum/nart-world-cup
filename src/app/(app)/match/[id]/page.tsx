@@ -101,7 +101,9 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
   // Comments.
   const { data: commentsRaw } = await supabase
     .from('comments')
-    .select('id, user_id, parent_id, body, created_at, updated_at, deleted_at, profiles(username, avatar_url, email)')
+    // Disambiguate the profiles embed: comments link to profiles via several
+    // FKs (likes/mentions/reactions), so name the author relationship explicitly.
+    .select('id, user_id, parent_id, body, created_at, updated_at, deleted_at, profiles!comments_user_id_profiles_id_fk(username, avatar_url, email)')
     .eq('match_id', id)
     .order('created_at', { ascending: true });
   const commentIds = (commentsRaw ?? []).map((c) => c.id);
