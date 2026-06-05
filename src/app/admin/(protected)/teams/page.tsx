@@ -2,6 +2,7 @@ import { asc } from 'drizzle-orm';
 import { Trash2 } from 'lucide-react';
 import { db, schema } from '@/lib/db';
 import { ConfirmActionButton } from '@/components/confirm-action-button';
+import { TeamBadge } from '@/components/team-badge';
 import { createTeam, deleteTeam } from './actions';
 
 export default async function TeamsPage() {
@@ -55,7 +56,8 @@ export default async function TeamsPage() {
           <ul className="divide-y divide-border">
             {teams.map((t) => (
               <li key={t.id} className="flex items-center gap-3 bg-card px-4 py-3">
-                <span className="w-8 text-sm text-muted-foreground">{t.id}</span>
+                <span className="w-6 text-sm text-muted-foreground">{t.id}</span>
+                <TeamBadge name={t.name} shortName={t.shortName} badgeUrl={t.badgeUrl} className="size-8" />
                 <span className="font-medium">{t.name}</span>
                 {t.shortName && (
                   <span className="rounded bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground">

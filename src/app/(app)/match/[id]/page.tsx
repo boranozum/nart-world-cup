@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { ArrowLeft, Lock, Zap } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { PlayerAvatar } from '@/components/player-avatar';
+import { TeamBadge } from '@/components/team-badge';
 import { LocalTime } from '@/components/local-time';
 import { goalBucketLabel, type GoalBucket } from '@/lib/predictions';
 import { CommentThread, type ThreadComment } from './comment-thread';
@@ -46,7 +47,7 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
 
   const [{ data: teams }, { data: result }, { data: allPredsRaw }, { data: myScore }] =
     await Promise.all([
-      supabase.from('teams').select('id, name, short_name').in('id', [match.team_a_id, match.team_b_id]),
+      supabase.from('teams').select('id, name, short_name, badge_url').in('id', [match.team_a_id, match.team_b_id]),
       supabase
         .from('match_results')
         .select('score_a, score_b, first_scoring_team, first_goal_bucket, motm_player_id')
@@ -199,14 +200,16 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
           </span>
           <span className="font-semibold uppercase text-muted-foreground">{match.status}</span>
         </div>
-        <div className="flex items-center justify-center gap-4 px-4 py-6">
-          <span className="flex-1 text-right font-display text-xl font-bold uppercase">
+        <div className="flex items-center justify-center gap-3 px-4 py-6">
+          <span className="flex flex-1 items-center justify-end gap-2.5 font-display text-xl font-bold uppercase">
             {teamA?.name}
+            <TeamBadge name={teamA?.name ?? ''} shortName={teamA?.short_name} badgeUrl={teamA?.badge_url} className="size-9" />
           </span>
           <span className="font-display text-3xl font-extrabold tabular-nums">
             {result ? `${result.score_a} : ${result.score_b}` : 'vs'}
           </span>
-          <span className="flex-1 text-left font-display text-xl font-bold uppercase">
+          <span className="flex flex-1 items-center justify-start gap-2.5 font-display text-xl font-bold uppercase">
+            <TeamBadge name={teamB?.name ?? ''} shortName={teamB?.short_name} badgeUrl={teamB?.badge_url} className="size-9" />
             {teamB?.name}
           </span>
         </div>

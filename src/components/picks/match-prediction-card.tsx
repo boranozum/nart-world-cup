@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Check, Lock, MessageSquare, Zap } from 'lucide-react';
 import { savePrediction } from '@/app/(app)/picks-actions';
 import { LocalTime } from '@/components/local-time';
+import { TeamBadge } from '@/components/team-badge';
 import {
   GOAL_BUCKETS,
   goalBucketLabel,
@@ -12,7 +13,7 @@ import {
   type FirstScoringTeam,
 } from '@/lib/predictions';
 
-export type CardTeam = { id: number; name: string; shortName: string | null };
+export type CardTeam = { id: number; name: string; shortName: string | null; badgeUrl?: string | null };
 export type CardPrediction = {
   scoreA: number | null;
   scoreB: number | null;
@@ -99,9 +100,10 @@ export function MatchPredictionCard({
       </div>
 
       {/* teams + score */}
-      <div className="flex items-center justify-center gap-4 px-4 py-5">
-        <span className="flex-1 text-right font-display text-lg font-bold uppercase">
+      <div className="flex items-center justify-center gap-3 px-4 py-5">
+        <span className="flex flex-1 items-center justify-end gap-2 font-display text-lg font-bold uppercase">
           {teamA.name}
+          <TeamBadge name={teamA.name} shortName={teamA.shortName} badgeUrl={teamA.badgeUrl} className="size-7" />
         </span>
         <div className="flex items-center gap-2">
           <input
@@ -120,7 +122,8 @@ export function MatchPredictionCard({
             className="score size-12 rounded-lg border border-input bg-background text-center text-2xl outline-none focus:border-primary disabled:opacity-60"
           />
         </div>
-        <span className="flex-1 text-left font-display text-lg font-bold uppercase">
+        <span className="flex flex-1 items-center justify-start gap-2 font-display text-lg font-bold uppercase">
+          <TeamBadge name={teamB.name} shortName={teamB.shortName} badgeUrl={teamB.badgeUrl} className="size-7" />
           {teamB.name}
         </span>
       </div>

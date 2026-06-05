@@ -73,7 +73,7 @@ export default async function PicksPage() {
 
   const [{ data: teams }, { data: preds }, { data: settings }, { count: boostersUsed }] =
     await Promise.all([
-      supabase.from('teams').select('id, name, short_name').in('id', teamIds),
+      supabase.from('teams').select('id, name, short_name, badge_url').in('id', teamIds),
       supabase
         .from('predictions')
         .select('match_id, score_a, score_b, first_scoring_team, first_goal_bucket, booster_applied')
@@ -88,7 +88,10 @@ export default async function PicksPage() {
     ]);
 
   const teamMap = new Map<number, CardTeam>(
-    (teams ?? []).map((t) => [t.id, { id: t.id, name: t.name, shortName: t.short_name }]),
+    (teams ?? []).map((t) => [
+      t.id,
+      { id: t.id, name: t.name, shortName: t.short_name, badgeUrl: t.badge_url },
+    ]),
   );
   const predMap = new Map<number, CardPrediction>(
     (preds ?? []).map((p) => [
