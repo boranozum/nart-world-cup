@@ -10,7 +10,9 @@ export async function createTeam(formData: FormData) {
   const name = String(formData.get('name') ?? '').trim();
   if (!name) return;
   const shortName = String(formData.get('shortName') ?? '').trim() || null;
-  const badgeUrl = String(formData.get('badgeUrl') ?? '').trim() || null;
+  // Strip all whitespace — a raw URL never contains spaces, and pasted URLs
+  // often pick up stray ones (which silently break the image).
+  const badgeUrl = String(formData.get('badgeUrl') ?? '').replace(/\s+/g, '') || null;
 
   await db.insert(schema.teams).values({ name, shortName, badgeUrl });
   revalidatePath('/admin/teams');
