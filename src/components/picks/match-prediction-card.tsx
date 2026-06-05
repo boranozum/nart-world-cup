@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState, useTransition } from 'react';
-import { Check, Lock, Zap } from 'lucide-react';
+import Link from 'next/link';
+import { Check, Lock, MessageSquare, Zap } from 'lucide-react';
 import { savePrediction } from '@/app/(app)/picks-actions';
 import { LocalTime } from '@/components/local-time';
 import {
@@ -200,6 +201,13 @@ export function MatchPredictionCard({
           </div>
         </div>
       </div>
+
+      <Link
+        href={`/match/${matchId}`}
+        className="flex items-center justify-center gap-1.5 border-t border-border py-2.5 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
+      >
+        <MessageSquare className="size-3.5" /> Details &amp; comments
+      </Link>
     </div>
   );
 }
