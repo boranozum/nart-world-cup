@@ -6,6 +6,7 @@ import { ArrowLeft, Trash2 } from 'lucide-react';
 import { db, schema } from '@/lib/db';
 import { PHASE_LABELS } from '@/lib/tournament';
 import { LocalTime } from '@/components/local-time';
+import { ConfirmActionButton } from '@/components/confirm-action-button';
 import type { GoalBucket } from '@/lib/predictions';
 import { AddMatchForm } from './add-match-form';
 import { ConcludeMatchForm, type ExistingResult, type ResultPlayer } from './conclude-match-form';
@@ -140,16 +141,18 @@ export default async function MatchDayDetailPage({
                       </p>
                     </div>
                     {matchDay.status !== 'finalized' && (
-                      <form action={deleteMatch}>
-                        <input type="hidden" name="id" value={m.id} />
-                        <input type="hidden" name="matchDayId" value={id} />
-                        <button
-                          aria-label="Delete match"
-                          className="rounded-md p-1.5 text-muted-foreground transition hover:bg-danger/10 hover:text-danger"
-                        >
-                          <Trash2 className="size-4" />
-                        </button>
-                      </form>
+                      <ConfirmActionButton
+                        action={deleteMatch}
+                        fields={{ id: m.id, matchDayId: id }}
+                        title="Delete match"
+                        message={`Delete ${m.teamAName} vs ${m.teamBName}? This also removes its predictions and result.`}
+                        confirmLabel="Delete"
+                        busyLabel="Deleting…"
+                        ariaLabel="Delete match"
+                        className="rounded-md p-1.5 text-muted-foreground transition hover:bg-danger/10 hover:text-danger"
+                      >
+                        <Trash2 className="size-4" />
+                      </ConfirmActionButton>
                     )}
                   </div>
                   <div className="mt-2">

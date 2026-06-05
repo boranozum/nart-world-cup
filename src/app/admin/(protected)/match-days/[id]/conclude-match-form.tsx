@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { CheckCircle2, Pencil, X } from 'lucide-react';
 import { GOAL_BUCKETS, goalBucketLabel, type GoalBucket } from '@/lib/predictions';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { concludeMatch, reopenMatch } from '../actions';
 
 export type ResultPlayer = { id: number; name: string; side: 'A' | 'B' };
@@ -42,6 +43,7 @@ export function ConcludeMatchForm({
 }: Props) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmingClear, setConfirmingClear] = useState(false);
   const [pending, startTransition] = useTransition();
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -65,6 +67,7 @@ export function ConcludeMatchForm({
     startTransition(async () => {
       const res = await reopenMatch(fd);
       if (res?.error) setError(res.error);
+      else setConfirmingClear(false);
     });
   }
 
@@ -183,13 +186,24 @@ export function ConcludeMatchForm({
           <button
             type="button"
             disabled={pending}
-            onClick={onReopen}
+            onClick={() => setConfirmingClear(true)}
             className="ml-auto rounded-lg px-3 py-2 text-sm font-medium text-danger transition hover:bg-danger/10 disabled:opacity-60"
           >
             Clear result
           </button>
         )}
       </div>
+
+      <ConfirmDialog
+        open={confirmingClear}
+        title="Clear result"
+        message="Remove the recorded result and reopen this match? Any computed points rely on it being concluded."
+        confirmLabel="Clear result"
+        busyLabel="Clearing…"
+        busy={pending}
+        onConfirm={onReopen}
+        onCancel={() => setConfirmingClear(false)}
+      />
     </form>
   );
 }

@@ -1,6 +1,7 @@
 import { asc } from 'drizzle-orm';
 import { Trash2 } from 'lucide-react';
 import { db, schema } from '@/lib/db';
+import { ConfirmActionButton } from '@/components/confirm-action-button';
 import { createTeam, deleteTeam } from './actions';
 
 export default async function TeamsPage() {
@@ -61,15 +62,20 @@ export default async function TeamsPage() {
                     {t.shortName}
                   </span>
                 )}
-                <form action={deleteTeam} className="ml-auto">
-                  <input type="hidden" name="id" value={t.id} />
-                  <button
-                    aria-label={`Delete ${t.name}`}
+                <span className="ml-auto">
+                  <ConfirmActionButton
+                    action={deleteTeam}
+                    fields={{ id: t.id }}
+                    title="Delete team"
+                    message={`Delete ${t.name}? This also removes its players and any matches using it.`}
+                    confirmLabel="Delete"
+                    busyLabel="Deleting…"
+                    ariaLabel={`Delete ${t.name}`}
                     className="rounded-md p-1.5 text-muted-foreground transition hover:bg-danger/10 hover:text-danger"
                   >
                     <Trash2 className="size-4" />
-                  </button>
-                </form>
+                  </ConfirmActionButton>
+                </span>
               </li>
             ))}
           </ul>
