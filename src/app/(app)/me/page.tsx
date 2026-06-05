@@ -212,13 +212,6 @@ export default async function MePage() {
           ))}
         </div>
       )}
-
-      {/* Sign out */}
-      <form action="/auth/signout" method="post" className="mt-10">
-        <button className="rounded-full border border-border px-5 py-2 text-sm font-medium transition-colors hover:bg-muted">
-          Sign out
-        </button>
-      </form>
     </section>
   );
 }

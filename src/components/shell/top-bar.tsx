@@ -4,17 +4,20 @@ import { Bell } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { DesktopNav } from './desktop-nav';
-
-function initials(email?: string | null): string {
-  if (!email) return '?';
-  return email[0]?.toUpperCase() ?? '?';
-}
+import { ProfileMenu } from './profile-menu';
 
 export async function TopBar() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('username, avatar_url')
+    .eq('id', user?.id ?? '')
+    .maybeSingle();
+  const name = profile?.username?.trim() || user?.email?.split('@')[0] || 'You';
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-card/85 backdrop-blur">
@@ -39,13 +42,7 @@ export async function TopBar() {
             <Bell className="size-4" />
           </button>
           <ThemeToggle />
-          <Link
-            href="/me"
-            aria-label="Your profile"
-            className="grid size-9 place-items-center rounded-full bg-primary font-display text-sm font-bold text-primary-foreground"
-          >
-            {initials(user?.email)}
-          </Link>
+          <ProfileMenu name={name} avatarUrl={profile?.avatar_url ?? null} />
         </div>
       </div>
     </header>
