@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Heart, MessageSquare, Pencil, Trash2 } from 'lucide-react';
 import { PlayerAvatar } from '@/components/player-avatar';
 import { LocalTime } from '@/components/local-time';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import {
   deleteComment,
   editComment,
@@ -185,6 +186,7 @@ function CommentItem({
   const [replying, setReplying] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState(c.body);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [busy, startBusy] = useTransition();
   const mine = c.userId === currentUserId;
 
@@ -210,9 +212,9 @@ function CommentItem({
   }
 
   function remove() {
-    if (!confirm('Delete this comment?')) return;
     startBusy(async () => {
       await deleteComment({ id: c.id, matchId });
+      setConfirmingDelete(false);
       onDone();
     });
   }
@@ -281,8 +283,7 @@ function CommentItem({
                   <Pencil className="size-3.5" /> Edit
                 </button>
                 <button
-                  onClick={remove}
-                  disabled={busy}
+                  onClick={() => setConfirmingDelete(true)}
                   className="inline-flex items-center gap-1 transition hover:text-danger"
                 >
                   <Trash2 className="size-3.5" /> Delete
@@ -307,6 +308,17 @@ function CommentItem({
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={confirmingDelete}
+        title="Delete comment"
+        message="Delete your comment permanently?"
+        confirmLabel="Delete"
+        busyLabel="Deleting…"
+        busy={busy}
+        onConfirm={remove}
+        onCancel={() => setConfirmingDelete(false)}
+      />
     </div>
   );
 }
