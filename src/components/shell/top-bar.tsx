@@ -1,10 +1,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Bell } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { DesktopNav } from './desktop-nav';
 import { ProfileMenu } from './profile-menu';
+import { NotificationsBell, type Notif } from './notifications-bell';
 
 export async function TopBar() {
   const supabase = await createClient();
@@ -12,12 +12,25 @@ export async function TopBar() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('username, avatar_url')
-    .eq('id', user?.id ?? '')
-    .maybeSingle();
+  const [{ data: profile }, { data: notifs }] = await Promise.all([
+    supabase.from('profiles').select('username, avatar_url').eq('id', user?.id ?? '').maybeSingle(),
+    supabase
+      .from('notifications')
+      .select('id, type, payload, read_at, created_at')
+      .eq('user_id', user?.id ?? '')
+      .order('created_at', { ascending: false })
+      .limit(20),
+  ]);
   const name = profile?.username?.trim() || user?.email?.split('@')[0] || 'You';
+
+  const notifications: Notif[] = (notifs ?? []).map((n) => ({
+    id: n.id,
+    type: n.type,
+    createdAt: new Date(n.created_at).toISOString(),
+    readAt: n.read_at ? new Date(n.read_at).toISOString() : null,
+    payload: (n.payload ?? {}) as Notif['payload'],
+  }));
+  const unreadCount = notifications.filter((n) => !n.readAt).length;
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-card/85 backdrop-blur">
@@ -34,13 +47,7 @@ export async function TopBar() {
         <DesktopNav className="ml-6 hidden md:flex" />
 
         <div className="ml-auto flex items-center gap-1.5">
-          <button
-            type="button"
-            aria-label="Notifications"
-            className="relative inline-flex size-9 items-center justify-center rounded-full border border-border text-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
-          >
-            <Bell className="size-4" />
-          </button>
+          <NotificationsBell notifications={notifications} unreadCount={unreadCount} />
           <ThemeToggle />
           <ProfileMenu name={name} avatarUrl={profile?.avatar_url ?? null} />
         </div>

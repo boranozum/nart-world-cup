@@ -108,6 +108,18 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
   const { data: likes } = commentIds.length
     ? await supabase.from('comment_likes').select('comment_id, user_id').in('comment_id', commentIds)
     : { data: [] };
+  // Resolve @mentions in this thread to linkable profiles (username -> id).
+  const { data: mentionRows } = commentIds.length
+    ? await supabase
+        .from('comment_mentions')
+        .select('mentioned_user_id, profiles(username)')
+        .in('comment_id', commentIds)
+    : { data: [] };
+  const mentionTargets: Record<string, string> = {};
+  for (const r of mentionRows ?? []) {
+    const prof = one(r.profiles) as { username: string | null } | null;
+    if (prof?.username) mentionTargets[prof.username.toLowerCase()] = r.mentioned_user_id;
+  }
   const likeCount = new Map<string, number>();
   const likedByMe = new Set<string>();
   for (const l of likes ?? []) {
@@ -301,6 +313,7 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
           matchId={id}
           currentUserId={user.id}
           comments={comments}
+          mentionTargets={mentionTargets}
           predictionsSecret={!started}
         />
       </div>
