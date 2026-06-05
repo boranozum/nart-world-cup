@@ -1,3 +1,5 @@
+import { ImageOrFallback } from '@/components/image-or-fallback';
+
 type Props = {
   name: string;
   avatarUrl?: string | null;
@@ -13,12 +15,7 @@ export function PlayerAvatar({ name, avatarUrl, className = 'size-9' }: Props) {
       className={`grid shrink-0 place-items-center overflow-hidden rounded-full bg-primary font-display font-bold text-primary-foreground ${className}`}
       aria-hidden
     >
-      {avatarUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={avatarUrl} alt="" className="size-full object-cover" />
-      ) : (
-        letter
-      )}
+      <ImageOrFallback src={avatarUrl} fallback={letter} imgClassName="size-full object-cover" />
     </span>
   );
 }

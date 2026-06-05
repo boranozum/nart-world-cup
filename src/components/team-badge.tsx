@@ -1,3 +1,5 @@
+import { ImageOrFallback } from '@/components/image-or-fallback';
+
 type Props = {
   name: string;
   shortName?: string | null;
@@ -14,12 +16,7 @@ export function TeamBadge({ name, shortName, badgeUrl, className = 'size-8' }: P
       className={`grid shrink-0 place-items-center overflow-hidden rounded-md bg-muted text-[10px] font-bold leading-none text-muted-foreground ${className}`}
       aria-hidden
     >
-      {badgeUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={badgeUrl} alt="" className="size-full object-contain" />
-      ) : (
-        label
-      )}
+      <ImageOrFallback src={badgeUrl} fallback={label} imgClassName="size-full object-contain" />
     </span>
   );
 }
