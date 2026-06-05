@@ -69,7 +69,7 @@ export default async function TeamsPage() {
                     action={deleteTeam}
                     fields={{ id: t.id }}
                     title="Delete team"
-                    message={`Delete ${t.name}? This also removes its players and any matches using it.`}
+                    message={`Delete ${t.name}? This also removes its players. Teams used in a match can’t be deleted.`}
                     confirmLabel="Delete"
                     busyLabel="Deleting…"
                     ariaLabel={`Delete ${t.name}`}

@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { eq } from 'drizzle-orm';
+import { eq, or } from 'drizzle-orm';
 import { db, schema } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin/session';
 
@@ -16,10 +16,23 @@ export async function createTeam(formData: FormData) {
   revalidatePath('/admin/teams');
 }
 
-export async function deleteTeam(formData: FormData) {
+export async function deleteTeam(formData: FormData): Promise<{ error: string } | void> {
   await requireAdmin();
   const id = Number(formData.get('id'));
   if (!id) return;
+
+  // A team referenced by any match can't be deleted (the FK has no cascade, and
+  // cascading would silently destroy matches/predictions/results).
+  const used = await db
+    .select({ id: schema.matches.id })
+    .from(schema.matches)
+    .where(or(eq(schema.matches.teamAId, id), eq(schema.matches.teamBId, id)))
+    .limit(1);
+  if (used.length > 0) {
+    return { error: 'This team is used in one or more matches. Delete those matches first.' };
+  }
+
+  // Players cascade-delete with the team.
   await db.delete(schema.teams).where(eq(schema.teams.id, id));
   revalidatePath('/admin/teams');
 }
