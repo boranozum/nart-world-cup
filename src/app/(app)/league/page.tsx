@@ -163,17 +163,20 @@ export default async function LeaguePage({
               >
                 {r.rank}
               </span>
-              <PlayerAvatar
-                name={displayName(r.profiles)}
-                avatarUrl={r.profiles?.avatar_url}
-                className="size-8 text-xs"
-              />
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium">
+              <Link
+                href={isMe ? '/me' : `/u/${r.user_id}`}
+                className="group flex min-w-0 flex-1 items-center gap-3"
+              >
+                <PlayerAvatar
+                  name={displayName(r.profiles)}
+                  avatarUrl={r.profiles?.avatar_url}
+                  className="size-8 text-xs"
+                />
+                <p className="truncate font-medium group-hover:underline">
                   {displayName(r.profiles)}
                   {isMe && <span className="ml-1.5 text-xs text-accent">You</span>}
                 </p>
-              </div>
+              </Link>
               {r.points_this_day > 0 && (
                 <span className="hidden text-xs font-medium text-accent sm:inline">
                   +{r.points_this_day}
