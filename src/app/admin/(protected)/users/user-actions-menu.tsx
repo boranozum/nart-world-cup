@@ -210,7 +210,9 @@ export function UserActionsMenu({
             </div>
 
             <p className="mt-3 text-xs text-muted-foreground">
-              Single-use, expires in 1 hour. Share it directly — no email is sent automatically.
+              Single-use, expires in 1 hour. The recipient must{' '}
+              <strong className="font-semibold text-foreground">open this URL in their browser</strong>
+              {' '}— not paste it into the login form.
             </p>
 
             <div className="mt-5 flex justify-end gap-2">

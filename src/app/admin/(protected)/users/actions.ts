@@ -2,6 +2,7 @@
 
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
+import { headers } from 'next/headers';
 import { db, schema } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin/session';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -57,12 +58,20 @@ export async function generateMagicLink(
   if (!email) return { error: 'Email is required.' };
 
   const adminClient = createAdminClient();
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL!;
+
+  // Derive the app origin from the request so this works in dev and prod
+  // without relying on env vars. Falls back to NEXT_PUBLIC_SITE_URL if set.
+  const hdrs = await headers();
+  const origin =
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    (hdrs.get('x-forwarded-proto') && hdrs.get('x-forwarded-host')
+      ? `${hdrs.get('x-forwarded-proto')}://${hdrs.get('x-forwarded-host')}`
+      : hdrs.get('origin') ?? 'http://localhost:3000');
 
   const { data, error } = await adminClient.auth.admin.generateLink({
     type: 'magiclink',
     email,
-    options: { redirectTo: `${siteUrl}/auth/callback` },
+    options: { redirectTo: `${origin}/auth/callback` },
   });
 
   if (error || !data?.properties?.action_link) {

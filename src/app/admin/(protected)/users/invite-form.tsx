@@ -89,7 +89,9 @@ export function InviteForm() {
       )}
 
       <p className="mt-2 text-xs text-muted-foreground">
-        Link is single-use and expires in 1 hour. Share it directly — no email is sent automatically.
+        Single-use, expires in 1 hour. The recipient must{' '}
+        <strong className="font-semibold text-foreground">open this URL in their browser</strong>
+        {' '}— it is not a code to paste into the login form.
       </p>
     </div>
   );
