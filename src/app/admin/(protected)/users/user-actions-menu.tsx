@@ -23,6 +23,7 @@ export function UserActionsMenu({
   const [busy, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   // Anchor the portal menu to the trigger button.
   useLayoutEffect(() => {
@@ -48,7 +49,10 @@ export function UserActionsMenu({
   useEffect(() => {
     if (!menuOpen) return;
     function onClickOutside(e: MouseEvent) {
-      if (triggerRef.current && !triggerRef.current.contains(e.target as Node)) {
+      if (
+        !triggerRef.current?.contains(e.target as Node) &&
+        !menuRef.current?.contains(e.target as Node)
+      ) {
         setMenuOpen(false);
       }
     }
@@ -94,6 +98,7 @@ export function UserActionsMenu({
         pos &&
         createPortal(
           <div
+            ref={menuRef}
             className="fixed z-50 min-w-[160px] rounded-xl border border-border bg-card py-1 shadow-lg"
             style={{ top: pos.top, right: pos.right }}
           >
