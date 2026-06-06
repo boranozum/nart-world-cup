@@ -45,3 +45,29 @@ export async function unblockUser(fd: FormData): Promise<{ error: string } | voi
 
   revalidatePath('/admin/users');
 }
+
+/** Generate a one-time magic link for an email address.
+ * Creates a Supabase auth user if one doesn't exist yet (first-time invite).
+ * Returns the action link to be shared by the admin — no email is sent automatically. */
+export async function generateMagicLink(
+  fd: FormData,
+): Promise<{ link: string } | { error: string }> {
+  await requireAdmin();
+  const email = (fd.get('email') as string | null)?.trim().toLowerCase();
+  if (!email) return { error: 'Email is required.' };
+
+  const adminClient = createAdminClient();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL!;
+
+  const { data, error } = await adminClient.auth.admin.generateLink({
+    type: 'magiclink',
+    email,
+    options: { redirectTo: `${siteUrl}/auth/callback` },
+  });
+
+  if (error || !data?.properties?.action_link) {
+    return { error: error?.message ?? 'Failed to generate magic link.' };
+  }
+
+  return { link: data.properties.action_link };
+}

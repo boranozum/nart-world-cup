@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { isAllowedEmail } from '@/lib/auth/domain';
+import { isAllowedEmail, isEmailProvider } from '@/lib/auth/domain';
 
 /**
  * OAuth callback. Supabase redirects here after Google sign-in.
@@ -26,8 +26,9 @@ export async function GET(request: Request) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Defense in depth: reject any non-company account that slipped through.
-  if (!user || !isAllowedEmail(user.email)) {
+  // Magic-link (email provider) users are admin-invited — skip the domain gate.
+  // Google OAuth users must still be @technarts.com.
+  if (!user || (!isEmailProvider(user.app_metadata) && !isAllowedEmail(user.email))) {
     await supabase.auth.signOut();
     return NextResponse.redirect(`${origin}/login?error=domain`);
   }

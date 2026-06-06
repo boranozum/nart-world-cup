@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { PlayerAvatar } from '@/components/player-avatar';
 import { LocalTime } from '@/components/local-time';
 import { UserActionsMenu } from './user-actions-menu';
+import { InviteForm } from './invite-form';
 
 function displayName(p: { username: string | null; email: string }) {
   return p.username?.trim() || p.email.split('@')[0];
@@ -53,7 +54,11 @@ export default async function AdminUsersPage() {
         {profiles.length} registered player{profiles.length !== 1 ? 's' : ''}.
       </p>
 
-      <div className="mt-6 overflow-x-auto rounded-xl border border-border">
+      <div className="mt-6">
+        <InviteForm />
+      </div>
+
+      <div className="mt-4 overflow-x-auto rounded-xl border border-border">
         {profiles.length === 0 ? (
           <p className="bg-card p-6 text-center text-sm text-muted-foreground">
             No users yet.
@@ -140,6 +145,7 @@ export default async function AdminUsersPage() {
                     <td className="px-3 py-2.5">
                       <UserActionsMenu
                         userId={p.id}
+                        email={p.email}
                         displayName={name}
                         isBlocked={isBlocked}
                       />
