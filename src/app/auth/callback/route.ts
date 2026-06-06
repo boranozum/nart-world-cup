@@ -13,7 +13,9 @@ export async function GET(request: Request) {
   const next = searchParams.get('next') ?? '/';
 
   if (!code) {
-    return NextResponse.redirect(`${origin}/login?error=missing_code`);
+    // No PKCE code — Supabase may have used implicit flow (tokens in URL hash).
+    // Redirect to the client-side confirm page which can read the hash fragment.
+    return NextResponse.redirect(`${origin}/auth/confirm`);
   }
 
   const supabase = await createClient();
