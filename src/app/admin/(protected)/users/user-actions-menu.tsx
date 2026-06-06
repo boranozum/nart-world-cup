@@ -2,23 +2,29 @@
 
 import { useEffect, useLayoutEffect, useRef, useState, useTransition } from 'react';
 import { createPortal } from 'react-dom';
-import { MoreVertical, ShieldOff, ShieldCheck } from 'lucide-react';
+import { MoreVertical, ShieldOff, ShieldCheck, Link2, Copy, Check } from 'lucide-react';
 import { ConfirmDialog } from '@/components/confirm-dialog';
-import { blockUser, unblockUser } from './actions';
+import { blockUser, unblockUser, generateMagicLink } from './actions';
 
 type MenuPos = { top: number; right: number };
 
 export function UserActionsMenu({
   userId,
+  email,
   displayName,
   isBlocked,
 }: {
   userId: string;
+  email: string;
   displayName: string;
   isBlocked: boolean;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [generatedLink, setGeneratedLink] = useState<string | null>(null);
+  const [linkError, setLinkError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const [pos, setPos] = useState<MenuPos | null>(null);
   const [busy, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +72,7 @@ export function UserActionsMenu({
     setConfirmOpen(true);
   }
 
-  function runAction() {
+  function runBlockAction() {
     setError(null);
     const fd = new FormData();
     fd.set('userId', userId);
@@ -77,6 +83,32 @@ export function UserActionsMenu({
         return;
       }
       setConfirmOpen(false);
+    });
+  }
+
+  function openLinkDialog() {
+    setMenuOpen(false);
+    setGeneratedLink(null);
+    setLinkError(null);
+    setCopied(false);
+    setLinkDialogOpen(true);
+    const fd = new FormData();
+    fd.set('email', email);
+    startTransition(async () => {
+      const res = await generateMagicLink(fd);
+      if ('error' in res) {
+        setLinkError(res.error);
+      } else {
+        setGeneratedLink(res.link);
+      }
+    });
+  }
+
+  function copyLink() {
+    if (!generatedLink) return;
+    navigator.clipboard.writeText(generatedLink).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     });
   }
 
@@ -99,9 +131,17 @@ export function UserActionsMenu({
         createPortal(
           <div
             ref={menuRef}
-            className="fixed z-50 min-w-[160px] rounded-xl border border-border bg-card py-1 shadow-lg"
+            className="fixed z-50 min-w-[180px] rounded-xl border border-border bg-card py-1 shadow-lg"
             style={{ top: pos.top, right: pos.right }}
           >
+            <button
+              type="button"
+              onClick={openLinkDialog}
+              className="flex w-full items-center gap-2 px-3 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
+            >
+              <Link2 className="size-4 text-muted-foreground" />
+              Generate magic link
+            </button>
             <button
               type="button"
               onClick={openConfirm}
@@ -125,6 +165,76 @@ export function UserActionsMenu({
           document.body,
         )}
 
+      {/* Magic link dialog */}
+      {linkDialogOpen && (
+        <div className="fixed inset-0 z-50 grid place-items-center p-4" role="dialog" aria-modal="true">
+          <button
+            type="button"
+            aria-label="Close"
+            tabIndex={-1}
+            onClick={() => setLinkDialogOpen(false)}
+            className="absolute inset-0 bg-black/50"
+          />
+          <div className="relative w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-xl">
+            <h3 className="font-display text-lg font-bold uppercase tracking-tight">Magic link</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              For <span className="font-medium text-foreground">{email}</span>
+            </p>
+
+            <div className="mt-4">
+              {busy && !generatedLink && !linkError && (
+                <p className="text-sm text-muted-foreground">Generating…</p>
+              )}
+              {linkError && (
+                <p className="text-sm text-danger">{linkError}</p>
+              )}
+              {generatedLink && (
+                <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2">
+                  <p className="flex-1 truncate font-mono text-xs text-muted-foreground">
+                    {generatedLink}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={copyLink}
+                    title="Copy link"
+                    className="shrink-0 rounded p-1 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                  >
+                    {copied ? (
+                      <Check className="size-3.5 text-green-500" />
+                    ) : (
+                      <Copy className="size-3.5" />
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <p className="mt-3 text-xs text-muted-foreground">
+              Single-use, expires in 1 hour. Share it directly — no email is sent automatically.
+            </p>
+
+            <div className="mt-5 flex justify-end gap-2">
+              {generatedLink && (
+                <button
+                  type="button"
+                  onClick={copyLink}
+                  className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:brightness-110"
+                >
+                  {copied ? 'Copied!' : 'Copy link'}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setLinkDialogOpen(false)}
+                className="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-muted"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <ConfirmDialog
         open={confirmOpen}
         title={isBlocked ? 'Unblock user' : 'Block user'}
@@ -138,7 +248,7 @@ export function UserActionsMenu({
         busyLabel={isBlocked ? 'Unblocking…' : 'Blocking…'}
         destructive={!isBlocked}
         busy={busy}
-        onConfirm={runAction}
+        onConfirm={runBlockAction}
         onCancel={() => {
           setConfirmOpen(false);
           setError(null);

@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import { isAllowedEmail } from '@/lib/auth/domain';
+import { isAllowedEmail, isEmailProvider } from '@/lib/auth/domain';
 
 /**
  * Next.js 16 renamed the `middleware` convention to `proxy`.
@@ -58,7 +58,8 @@ export async function proxy(request: NextRequest) {
       url.pathname = '/login';
       return NextResponse.redirect(url);
     }
-    if (!isAllowedEmail(user.email)) {
+    // Magic-link (email provider) users are admin-invited and bypass the domain gate.
+    if (!isEmailProvider(user.app_metadata) && !isAllowedEmail(user.email)) {
       const url = request.nextUrl.clone();
       url.pathname = '/login';
       url.search = '?error=domain';
