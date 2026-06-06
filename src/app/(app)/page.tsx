@@ -6,6 +6,7 @@ import {
   type CardPrediction,
   type CardTeam,
 } from '@/components/picks/match-prediction-card';
+import type { SelectablePlayer } from '@/components/picks/player-select';
 import type { FirstScoringTeam } from '@/lib/predictions';
 
 function EmptyState({ title, body }: { title: string; body: string }) {
@@ -71,12 +72,13 @@ export default async function PicksPage() {
   const teamIds = [...new Set(matches.flatMap((m) => [m.team_a_id, m.team_b_id]))];
   const matchIds = matches.map((m) => m.id);
 
-  const [{ data: teams }, { data: preds }, { data: settings }, { count: boostersUsed }] =
+  const [{ data: teams }, { data: players }, { data: preds }, { data: settings }, { count: boostersUsed }] =
     await Promise.all([
       supabase.from('teams').select('id, name, short_name, badge_url').in('id', teamIds),
+      supabase.from('players').select('id, name, face_url, team_id').in('team_id', teamIds),
       supabase
         .from('predictions')
-        .select('match_id, score_a, score_b, first_scoring_team, first_goal_bucket, booster_applied')
+        .select('match_id, score_a, score_b, first_scoring_team, first_goal_bucket, motm_player_id, booster_applied')
         .eq('user_id', user!.id)
         .in('match_id', matchIds),
       supabase.from('league_settings').select('booster_total').maybeSingle(),
@@ -93,6 +95,13 @@ export default async function PicksPage() {
       { id: t.id, name: t.name, shortName: t.short_name, badgeUrl: t.badge_url },
     ]),
   );
+  // Players grouped by their team, sorted by name, for the MOTM picker.
+  const playersByTeam = new Map<number, { id: number; name: string; faceUrl: string | null }[]>();
+  for (const p of (players ?? []).slice().sort((a, b) => a.name.localeCompare(b.name))) {
+    const list = playersByTeam.get(p.team_id) ?? [];
+    list.push({ id: p.id, name: p.name, faceUrl: p.face_url });
+    playersByTeam.set(p.team_id, list);
+  }
   const predMap = new Map<number, CardPrediction>(
     (preds ?? []).map((p) => [
       p.match_id,
@@ -101,6 +110,7 @@ export default async function PicksPage() {
         scoreB: p.score_b,
         firstScoringTeam: p.first_scoring_team as FirstScoringTeam | null,
         firstGoalBucket: p.first_goal_bucket,
+        motmPlayerId: p.motm_player_id,
         boosterApplied: p.booster_applied,
       },
     ]),
@@ -123,6 +133,18 @@ export default async function PicksPage() {
           const teamA = teamMap.get(m.team_a_id);
           const teamB = teamMap.get(m.team_b_id);
           if (!teamA || !teamB) return null;
+          const matchPlayers: SelectablePlayer[] = [
+            ...(playersByTeam.get(m.team_a_id) ?? []).map((p) => ({
+              ...p,
+              side: 'A' as const,
+              teamName: teamA.name,
+            })),
+            ...(playersByTeam.get(m.team_b_id) ?? []).map((p) => ({
+              ...p,
+              side: 'B' as const,
+              teamName: teamB.name,
+            })),
+          ];
           return (
             <MatchPredictionCard
               key={m.id}
@@ -130,6 +152,7 @@ export default async function PicksPage() {
               kickoffUtc={new Date(m.kickoff_utc).toISOString()}
               teamA={teamA}
               teamB={teamB}
+              players={matchPlayers}
               initial={predMap.get(m.id) ?? null}
               boostersRemaining={boostersRemaining}
             />
