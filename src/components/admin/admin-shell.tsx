@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, CalendarDays, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, Shirt, CalendarDays, LogOut } from 'lucide-react';
 import { adminLogout } from '@/app/admin/auth-actions';
 
 const NAV = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { href: '/admin/teams', label: 'Teams', icon: Users },
+  { href: '/admin/players', label: 'Players', icon: Shirt },
   { href: '/admin/match-days', label: 'Match Days', icon: CalendarDays },
 ];
 

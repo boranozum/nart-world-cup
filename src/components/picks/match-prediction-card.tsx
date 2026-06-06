@@ -6,6 +6,7 @@ import { Check, Lock, MessageSquare, Zap } from 'lucide-react';
 import { savePrediction } from '@/app/(app)/picks-actions';
 import { LocalTime } from '@/components/local-time';
 import { TeamBadge } from '@/components/team-badge';
+import { PlayerSelect, type SelectablePlayer } from '@/components/picks/player-select';
 import {
   GOAL_BUCKETS,
   goalBucketLabel,
@@ -19,6 +20,7 @@ export type CardPrediction = {
   scoreB: number | null;
   firstScoringTeam: FirstScoringTeam | null;
   firstGoalBucket: string | null;
+  motmPlayerId: number | null;
   boosterApplied: boolean;
 };
 
@@ -31,6 +33,7 @@ export function MatchPredictionCard({
   kickoffUtc,
   teamA,
   teamB,
+  players,
   initial,
   boostersRemaining,
 }: {
@@ -38,6 +41,7 @@ export function MatchPredictionCard({
   kickoffUtc: string;
   teamA: CardTeam;
   teamB: CardTeam;
+  players: SelectablePlayer[];
   initial: CardPrediction | null;
   boostersRemaining: number;
 }) {
@@ -47,6 +51,7 @@ export function MatchPredictionCard({
     initial?.firstScoringTeam ?? '',
   );
   const [bucket, setBucket] = useState<string>(initial?.firstGoalBucket ?? '');
+  const [motm, setMotm] = useState<number | null>(initial?.motmPlayerId ?? null);
   const [booster, setBooster] = useState<boolean>(initial?.boosterApplied ?? false);
   const [pending, startTransition] = useTransition();
   const [status, setStatus] = useState<'idle' | 'saved' | string>('idle');
@@ -71,6 +76,7 @@ export function MatchPredictionCard({
         scoreB: scoreB === '' ? null : Math.max(0, parseInt(scoreB, 10) || 0),
         firstScoringTeam: firstTeam === '' ? null : firstTeam,
         firstGoalBucket: bucket === '' ? null : bucket,
+        motmPlayerId: motm,
         boosterApplied: booster,
       });
       setStatus('error' in res ? res.error : 'saved');
@@ -169,6 +175,19 @@ export function MatchPredictionCard({
               </option>
             ))}
           </select>
+        </div>
+
+        <div>
+          <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Man of the match
+          </p>
+          {players.length === 0 ? (
+            <p className="rounded-lg border border-dashed border-border px-3 py-2 text-xs text-muted-foreground">
+              No players listed for these teams yet.
+            </p>
+          ) : (
+            <PlayerSelect players={players} value={motm} onChange={setMotm} disabled={locked} />
+          )}
         </div>
 
         <div className="flex items-center justify-between gap-3 pt-1">

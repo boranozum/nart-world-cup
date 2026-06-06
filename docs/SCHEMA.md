@@ -94,6 +94,7 @@ create table players (
   id         integer generated always as identity primary key,
   team_id    integer not null references teams(id) on delete cascade,
   name       text not null,
+  face_url   text,                              -- optional player face photo
   api_ref    text,
   created_at timestamptz not null default now()
 );

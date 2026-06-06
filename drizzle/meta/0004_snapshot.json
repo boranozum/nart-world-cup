@@ -1,6 +1,6 @@
 {
-  "id": "a106f195-2622-4fc2-81a1-a7b10ca65a33",
-  "prevId": "15048c01-ca6b-4e65-b0fb-f3926a258d80",
+  "id": "112f99f6-6f7b-4aa1-acc4-4785e4b95a3c",
+  "prevId": "a106f195-2622-4fc2-81a1-a7b10ca65a33",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -41,10 +41,10 @@
       "uniqueConstraints": {
         "admins_username_unique": {
           "name": "admins_username_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "username"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -80,28 +80,28 @@
         "comment_likes_comment_id_comments_id_fk": {
           "name": "comment_likes_comment_id_comments_id_fk",
           "tableFrom": "comment_likes",
+          "tableTo": "comments",
           "columnsFrom": [
             "comment_id"
           ],
-          "tableTo": "comments",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "comment_likes_user_id_profiles_id_fk": {
           "name": "comment_likes_user_id_profiles_id_fk",
           "tableFrom": "comment_likes",
+          "tableTo": "profiles",
           "columnsFrom": [
             "user_id"
           ],
-          "tableTo": "profiles",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -140,28 +140,28 @@
         "comment_mentions_comment_id_comments_id_fk": {
           "name": "comment_mentions_comment_id_comments_id_fk",
           "tableFrom": "comment_mentions",
+          "tableTo": "comments",
           "columnsFrom": [
             "comment_id"
           ],
-          "tableTo": "comments",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "comment_mentions_mentioned_user_id_profiles_id_fk": {
           "name": "comment_mentions_mentioned_user_id_profiles_id_fk",
           "tableFrom": "comment_mentions",
+          "tableTo": "profiles",
           "columnsFrom": [
             "mentioned_user_id"
           ],
-          "tableTo": "profiles",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -206,28 +206,28 @@
         "comment_reactions_comment_id_comments_id_fk": {
           "name": "comment_reactions_comment_id_comments_id_fk",
           "tableFrom": "comment_reactions",
+          "tableTo": "comments",
           "columnsFrom": [
             "comment_id"
           ],
-          "tableTo": "comments",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "comment_reactions_user_id_profiles_id_fk": {
           "name": "comment_reactions_user_id_profiles_id_fk",
           "tableFrom": "comment_reactions",
+          "tableTo": "profiles",
           "columnsFrom": [
             "user_id"
           ],
-          "tableTo": "profiles",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -319,50 +319,50 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "comments_match_id_matches_id_fk": {
           "name": "comments_match_id_matches_id_fk",
           "tableFrom": "comments",
+          "tableTo": "matches",
           "columnsFrom": [
             "match_id"
           ],
-          "tableTo": "matches",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "comments_user_id_profiles_id_fk": {
           "name": "comments_user_id_profiles_id_fk",
           "tableFrom": "comments",
+          "tableTo": "profiles",
           "columnsFrom": [
             "user_id"
           ],
-          "tableTo": "profiles",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "comments_parent_id_comments_id_fk": {
           "name": "comments_parent_id_comments_id_fk",
           "tableFrom": "comments",
+          "tableTo": "comments",
           "columnsFrom": [
             "parent_id"
           ],
-          "tableTo": "comments",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -427,15 +427,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "always",
             "name": "match_days_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "2147483647",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "always"
+            "cycle": false
           }
         },
         "name": {
@@ -491,10 +491,10 @@
             }
           ],
           "isUnique": true,
-          "with": {},
-          "method": "btree",
           "where": "\"match_days\".\"status\" = 'active'",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -572,41 +572,41 @@
         "match_results_match_id_matches_id_fk": {
           "name": "match_results_match_id_matches_id_fk",
           "tableFrom": "match_results",
+          "tableTo": "matches",
           "columnsFrom": [
             "match_id"
           ],
-          "tableTo": "matches",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "match_results_motm_player_id_players_id_fk": {
           "name": "match_results_motm_player_id_players_id_fk",
           "tableFrom": "match_results",
+          "tableTo": "players",
           "columnsFrom": [
             "motm_player_id"
           ],
-          "tableTo": "players",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "match_results_concluded_by_admins_id_fk": {
           "name": "match_results_concluded_by_admins_id_fk",
           "tableFrom": "match_results",
+          "tableTo": "admins",
           "columnsFrom": [
             "concluded_by"
           ],
-          "tableTo": "admins",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -625,15 +625,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "always",
             "name": "matches_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "2147483647",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "always"
+            "cycle": false
           }
         },
         "match_day_id": {
@@ -687,41 +687,41 @@
         "matches_match_day_id_match_days_id_fk": {
           "name": "matches_match_day_id_match_days_id_fk",
           "tableFrom": "matches",
+          "tableTo": "match_days",
           "columnsFrom": [
             "match_day_id"
           ],
-          "tableTo": "match_days",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "matches_team_a_id_teams_id_fk": {
           "name": "matches_team_a_id_teams_id_fk",
           "tableFrom": "matches",
+          "tableTo": "teams",
           "columnsFrom": [
             "team_a_id"
           ],
-          "tableTo": "teams",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "matches_team_b_id_teams_id_fk": {
           "name": "matches_team_b_id_teams_id_fk",
           "tableFrom": "matches",
+          "tableTo": "teams",
           "columnsFrom": [
             "team_b_id"
           ],
-          "tableTo": "teams",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -798,24 +798,24 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "notifications_user_id_profiles_id_fk": {
           "name": "notifications_user_id_profiles_id_fk",
           "tableFrom": "notifications",
+          "tableTo": "profiles",
           "columnsFrom": [
             "user_id"
           ],
-          "tableTo": "profiles",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -834,15 +834,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "always",
             "name": "players_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "2147483647",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "always"
+            "cycle": false
           }
         },
         "team_id": {
@@ -856,6 +856,12 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "face_url": {
+          "name": "face_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "api_ref": {
           "name": "api_ref",
@@ -876,15 +882,15 @@
         "players_team_id_teams_id_fk": {
           "name": "players_team_id_teams_id_fk",
           "tableFrom": "players",
+          "tableTo": "teams",
           "columnsFrom": [
             "team_id"
           ],
-          "tableTo": "teams",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -1011,63 +1017,63 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "prediction_scores_prediction_id_predictions_id_fk": {
           "name": "prediction_scores_prediction_id_predictions_id_fk",
           "tableFrom": "prediction_scores",
+          "tableTo": "predictions",
           "columnsFrom": [
             "prediction_id"
           ],
-          "tableTo": "predictions",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "prediction_scores_match_id_matches_id_fk": {
           "name": "prediction_scores_match_id_matches_id_fk",
           "tableFrom": "prediction_scores",
+          "tableTo": "matches",
           "columnsFrom": [
             "match_id"
           ],
-          "tableTo": "matches",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "prediction_scores_user_id_profiles_id_fk": {
           "name": "prediction_scores_user_id_profiles_id_fk",
           "tableFrom": "prediction_scores",
+          "tableTo": "profiles",
           "columnsFrom": [
             "user_id"
           ],
-          "tableTo": "profiles",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "prediction_scores_match_day_id_match_days_id_fk": {
           "name": "prediction_scores_match_day_id_match_days_id_fk",
           "tableFrom": "prediction_scores",
+          "tableTo": "match_days",
           "columnsFrom": [
             "match_day_id"
           ],
-          "tableTo": "match_days",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -1158,52 +1164,52 @@
         "predictions_user_id_profiles_id_fk": {
           "name": "predictions_user_id_profiles_id_fk",
           "tableFrom": "predictions",
+          "tableTo": "profiles",
           "columnsFrom": [
             "user_id"
           ],
-          "tableTo": "profiles",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "predictions_match_id_matches_id_fk": {
           "name": "predictions_match_id_matches_id_fk",
           "tableFrom": "predictions",
+          "tableTo": "matches",
           "columnsFrom": [
             "match_id"
           ],
-          "tableTo": "matches",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "predictions_motm_player_id_players_id_fk": {
           "name": "predictions_motm_player_id_players_id_fk",
           "tableFrom": "predictions",
+          "tableTo": "players",
           "columnsFrom": [
             "motm_player_id"
           ],
-          "tableTo": "players",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "predictions_user_match_unique": {
           "name": "predictions_user_match_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "user_id",
             "match_id"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -1280,17 +1286,17 @@
       "uniqueConstraints": {
         "profiles_email_unique": {
           "name": "profiles_email_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "email"
-          ],
-          "nullsNotDistinct": false
+          ]
         },
         "profiles_username_unique": {
           "name": "profiles_username_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "username"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -1345,28 +1351,28 @@
         "standings_snapshot_rows_snapshot_id_standings_snapshots_id_fk": {
           "name": "standings_snapshot_rows_snapshot_id_standings_snapshots_id_fk",
           "tableFrom": "standings_snapshot_rows",
+          "tableTo": "standings_snapshots",
           "columnsFrom": [
             "snapshot_id"
           ],
-          "tableTo": "standings_snapshots",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "standings_snapshot_rows_user_id_profiles_id_fk": {
           "name": "standings_snapshot_rows_user_id_profiles_id_fk",
           "tableFrom": "standings_snapshot_rows",
+          "tableTo": "profiles",
           "columnsFrom": [
             "user_id"
           ],
-          "tableTo": "profiles",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -1419,15 +1425,15 @@
         "standings_snapshots_match_day_id_match_days_id_fk": {
           "name": "standings_snapshots_match_day_id_match_days_id_fk",
           "tableFrom": "standings_snapshots",
+          "tableTo": "match_days",
           "columnsFrom": [
             "match_day_id"
           ],
-          "tableTo": "match_days",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -1451,15 +1457,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "always",
             "name": "teams_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "2147483647",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "always"
+            "cycle": false
           }
         },
         "name": {
@@ -1600,10 +1606,10 @@
     }
   },
   "schemas": {},
-  "views": {},
   "sequences": {},
   "roles": {},
   "policies": {},
+  "views": {},
   "_meta": {
     "columns": {},
     "schemas": {},

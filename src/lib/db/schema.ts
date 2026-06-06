@@ -112,6 +112,7 @@ export const players = pgTable('players', {
     .notNull()
     .references(() => teams.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
+  faceUrl: text('face_url'),
   apiRef: text('api_ref'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });

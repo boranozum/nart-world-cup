@@ -9,6 +9,7 @@ type SaveInput = {
   scoreB: number | null;
   firstScoringTeam: 'A' | 'B' | 'none' | null;
   firstGoalBucket: string | null;
+  motmPlayerId: number | null;
   boosterApplied: boolean;
 };
 
@@ -21,7 +22,7 @@ export async function savePrediction(input: SaveInput): Promise<{ error: string 
 
   const { data: match } = await supabase
     .from('matches')
-    .select('id, kickoff_utc, match_day_id')
+    .select('id, kickoff_utc, match_day_id, team_a_id, team_b_id')
     .eq('id', input.matchId)
     .maybeSingle();
   if (!match) return { error: 'Match not found.' };
@@ -43,6 +44,20 @@ export async function savePrediction(input: SaveInput): Promise<{ error: string 
       ? input.firstGoalBucket
       : null;
 
+  // The MOTM pick must be a player on one of the two teams in this match.
+  let motmPlayerId: number | null = null;
+  if (input.motmPlayerId != null) {
+    const { data: player } = await supabase
+      .from('players')
+      .select('id, team_id')
+      .eq('id', input.motmPlayerId)
+      .maybeSingle();
+    if (!player || (player.team_id !== match.team_a_id && player.team_id !== match.team_b_id)) {
+      return { error: 'That player is not in this match.' };
+    }
+    motmPlayerId = player.id;
+  }
+
   const { error } = await supabase.from('predictions').upsert(
     {
       user_id: user.id,
@@ -51,6 +66,7 @@ export async function savePrediction(input: SaveInput): Promise<{ error: string 
       score_b: input.scoreB,
       first_scoring_team: input.firstScoringTeam,
       first_goal_bucket: bucket,
+      motm_player_id: motmPlayerId,
       booster_applied: input.boosterApplied,
     },
     { onConflict: 'user_id,match_id' },
