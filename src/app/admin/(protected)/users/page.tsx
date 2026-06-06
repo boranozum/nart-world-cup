@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { count, desc, eq } from 'drizzle-orm';
 import { db, schema } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin/session';
@@ -87,7 +88,10 @@ export default async function AdminUsersPage() {
                   <tr key={p.id} className="transition hover:bg-muted/20">
                     {/* Player */}
                     <td className="px-4 py-2.5">
-                      <div className="flex items-center gap-2.5">
+                      <Link
+                        href={`/admin/users/${p.id}`}
+                        className="flex items-center gap-2.5 hover:opacity-80"
+                      >
                         <PlayerAvatar
                           name={name}
                           avatarUrl={p.avatarUrl}
@@ -97,7 +101,7 @@ export default async function AdminUsersPage() {
                           <p className="truncate font-medium leading-tight">{name}</p>
                           <p className="truncate text-xs text-muted-foreground">{p.email}</p>
                         </div>
-                      </div>
+                      </Link>
                     </td>
 
                     {/* Points */}
