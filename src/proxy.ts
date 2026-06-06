@@ -64,6 +64,15 @@ export async function proxy(request: NextRequest) {
       url.search = '?error=domain';
       return NextResponse.redirect(url);
     }
+    // app_metadata.blocked is set server-side by the admin block action.
+    // getUser() always fetches from Supabase's auth server so this reflects
+    // the current state immediately after blocking.
+    if (user.app_metadata?.blocked === true) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/auth/signout';
+      url.search = '?reason=blocked';
+      return NextResponse.redirect(url);
+    }
   }
 
   return response;

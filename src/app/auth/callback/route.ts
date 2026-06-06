@@ -35,9 +35,14 @@ export async function GET(request: Request) {
   // First login → onboarding. `onboarded_at` is set when the user finishes setup.
   const { data: profile } = await supabase
     .from('profiles')
-    .select('onboarded_at')
+    .select('onboarded_at, blocked_at')
     .eq('id', user.id)
     .maybeSingle();
+
+  if (profile?.blocked_at) {
+    await supabase.auth.signOut();
+    return NextResponse.redirect(`${origin}/login?error=blocked`);
+  }
 
   const dest = profile?.onboarded_at ? next : '/onboarding';
   return NextResponse.redirect(`${origin}${dest}`);
