@@ -8,7 +8,10 @@ import { isAllowedEmail, isEmailProvider } from '@/lib/auth/domain';
  * routes to onboarding (first login) or the requested destination.
  */
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
+  // Use the explicit SITE_URL env var so the origin is always the public domain,
+  // not the internal Docker address Next.js sees when running behind a proxy.
+  const origin = (process.env.SITE_URL ?? new URL(request.url).origin).replace(/\/$/, '');
   const code = searchParams.get('code');
   const next = searchParams.get('next') ?? '/';
 
