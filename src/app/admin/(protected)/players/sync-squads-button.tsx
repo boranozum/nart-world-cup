@@ -6,16 +6,18 @@ import { syncSquadsFromApi } from './actions';
 
 export function SyncSquadsButton() {
   const [pending, startTransition] = useTransition();
-  const [result, setResult] = useState<string | null>(null);
+  const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
 
   function run() {
     setResult(null);
     startTransition(async () => {
       const res = await syncSquadsFromApi();
       if ('error' in res) {
-        setResult(`Error: ${res.error}`);
+        setResult({ ok: false, text: res.error });
       } else {
-        setResult(`Done — ${res.imported} players imported.`);
+        const parts = [`${res.imported} imported`];
+        if (res.updated > 0) parts.push(`${res.updated} photos updated`);
+        setResult({ ok: true, text: parts.join(', ') + '.' });
       }
     });
   }
@@ -31,8 +33,8 @@ export function SyncSquadsButton() {
         {pending ? 'Syncing squads…' : 'Sync squads from API'}
       </button>
       {result && (
-        <span className={`text-sm ${result.startsWith('Error') ? 'text-danger' : 'text-success'}`}>
-          {result}
+        <span className={`text-sm ${result.ok ? 'text-success' : 'text-danger'}`}>
+          {result.text}
         </span>
       )}
     </div>

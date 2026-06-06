@@ -32,6 +32,7 @@ export interface CanonicalPlayer {
   apiRef: string;
   teamApiRef: string;
   name: string;
+  faceUrl?: string;
 }
 
 export interface CanonicalMatch {

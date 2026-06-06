@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { asc, eq } from 'drizzle-orm';
 import { db, schema } from '@/lib/db';
-import { PlayerRow, type AdminPlayer } from './player-row';
+import { type AdminPlayer } from './player-row';
 import { createPlayer } from './actions';
 import { SyncSquadsButton } from './sync-squads-button';
+import { PlayersGrid } from './players-grid';
 
 const inputCls =
   'w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:border-primary';
@@ -30,8 +31,8 @@ export default async function PlayersPage() {
   ]);
 
   return (
-    <div className="max-w-3xl">
-      <div className="flex items-start justify-between gap-4">
+    <div>
+      <div className="flex max-w-3xl items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl font-extrabold uppercase tracking-tight">Players</h1>
           <p className="mt-1 text-muted-foreground">
@@ -50,49 +51,47 @@ export default async function PlayersPage() {
           page before adding players.
         </p>
       ) : (
-        <form
-          action={createPlayer}
-          className="mt-6 grid gap-3 rounded-xl border border-border bg-card p-5 sm:grid-cols-[1fr_10rem_auto] sm:items-end"
-        >
-          <div>
-            <label className={labelCls}>Name</label>
-            <input name="name" required placeholder="Mauro Icardi" className={inputCls} />
-          </div>
-          <div>
-            <label className={labelCls}>Team</label>
-            <select name="teamId" required defaultValue="" className={inputCls}>
-              <option value="" disabled>
-                Select team…
-              </option>
-              {teams.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
+        <>
+          <form
+            action={createPlayer}
+            className="mt-6 max-w-3xl grid gap-3 rounded-xl border border-border bg-card p-5 sm:grid-cols-[1fr_10rem_auto] sm:items-end"
+          >
+            <div>
+              <label className={labelCls}>Name</label>
+              <input name="name" required placeholder="Mauro Icardi" className={inputCls} />
+            </div>
+            <div>
+              <label className={labelCls}>Team</label>
+              <select name="teamId" required defaultValue="" className={inputCls}>
+                <option value="" disabled>
+                  Select team…
                 </option>
-              ))}
-            </select>
-          </div>
-          <button className="rounded-lg bg-primary px-5 py-2 font-semibold text-primary-foreground transition hover:brightness-110">
-            Add
-          </button>
-          <input
-            name="faceUrl"
-            placeholder="Face photo URL (optional)"
-            className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary sm:col-span-3"
-          />
-        </form>
-      )}
+                {teams.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button className="rounded-lg bg-primary px-5 py-2 font-semibold text-primary-foreground transition hover:brightness-110">
+              Add
+            </button>
+            <input
+              name="faceUrl"
+              placeholder="Face photo URL (optional)"
+              className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary sm:col-span-3"
+            />
+          </form>
 
-      <div className="mt-6 overflow-hidden rounded-xl border border-border">
-        {players.length === 0 ? (
-          <p className="bg-card p-6 text-center text-sm text-muted-foreground">No players yet.</p>
-        ) : (
-          <ul className="divide-y divide-border">
-            {players.map((p) => (
-              <PlayerRow key={p.id} player={p as AdminPlayer} teams={teams} />
-            ))}
-          </ul>
-        )}
-      </div>
+          {players.length === 0 ? (
+            <p className="mt-6 rounded-xl border border-dashed border-border bg-card/50 p-6 text-center text-sm text-muted-foreground">
+              No players yet.
+            </p>
+          ) : (
+            <PlayersGrid players={players as AdminPlayer[]} teams={teams} />
+          )}
+        </>
+      )}
     </div>
   );
 }

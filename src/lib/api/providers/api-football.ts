@@ -9,7 +9,8 @@ import type {
 
 const BASE = 'https://v3.football.api-sports.io';
 const WC_LEAGUE = 1;
-const WC_SEASON = 2026;
+// Override via API_FOOTBALL_SEASON for testing with a past season (e.g. 2022).
+const WC_SEASON = Number(process.env.API_FOOTBALL_SEASON ?? 2026);
 
 // API-Football fixture status short codes → canonical status.
 const STATUS_MAP: Record<string, CanonicalMatch['status']> = {
@@ -53,7 +54,7 @@ type ApfTeamRow = {
 
 type ApfSquadRow = {
   team: { id: number };
-  players: { id: number; name: string }[];
+  players: { id: number; name: string; photo: string }[];
 };
 
 type ApfFixtureRow = {
@@ -110,6 +111,7 @@ export class ApiFootballAdapter implements SportsApiAdapter {
       apiRef: String(p.id),
       teamApiRef,
       name: p.name,
+      faceUrl: p.photo || undefined,
     }));
   }
 

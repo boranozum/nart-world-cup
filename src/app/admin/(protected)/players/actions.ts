@@ -13,7 +13,7 @@ function cleanUrl(value: FormDataEntryValue | null): string | null {
 }
 
 export async function syncSquadsFromApi(): Promise<
-  { imported: number } | { error: string }
+  { imported: number; updated: number } | { error: string }
 > {
   await requireAdmin();
   try {
@@ -27,28 +27,46 @@ export async function syncSquadsFromApi(): Promise<
     }
 
     const adapter = getSportsAdapter();
-    let imported = 0;
 
-    for (const team of teams) {
-      const players = await adapter.fetchPlayers(team.apiRef!);
-      for (const p of players) {
-        const [existing] = await db
-          .select({ id: schema.players.id })
-          .from(schema.players)
-          .where(eq(schema.players.apiRef, p.apiRef))
-          .limit(1);
-        if (!existing) {
-          await db.insert(schema.players).values({
-            name: p.name,
-            teamId: team.id,
-            apiRef: p.apiRef,
-          });
-          imported++;
-        }
-      }
+    // 300 req/min ≈ 5 req/sec. Process in batches of 5 with a 1-second pause
+    // between batches to respect the per-second burst limit.
+    const BATCH = 5;
+    const results: { team: (typeof teams)[number]; players: Awaited<ReturnType<typeof adapter.fetchPlayers>> }[] = [];
+    for (let i = 0; i < teams.length; i += BATCH) {
+      const batch = teams.slice(i, i + BATCH);
+      const batchResults = await Promise.all(
+        batch.map((team) => adapter.fetchPlayers(team.apiRef!).then((players) => ({ team, players }))),
+      );
+      results.push(...batchResults);
+      if (i + BATCH < teams.length) await new Promise((r) => setTimeout(r, 1000));
     }
+
+    const existingRows = await db
+      .select({ apiRef: schema.players.apiRef })
+      .from(schema.players)
+      .where(isNotNull(schema.players.apiRef));
+    const existingRefs = new Set(existingRows.map((r) => r.apiRef!));
+
+    const allPlayers = results.flatMap(({ team, players }) =>
+      players.map((p) => ({ name: p.name, teamId: team.id, apiRef: p.apiRef, faceUrl: p.faceUrl ?? null })),
+    );
+
+    const toInsert = allPlayers.filter((p) => !existingRefs.has(p.apiRef));
+    const toUpdate = allPlayers.filter((p) => existingRefs.has(p.apiRef) && p.faceUrl);
+
+    if (toInsert.length > 0) {
+      await db.insert(schema.players).values(toInsert);
+    }
+    if (toUpdate.length > 0) {
+      await Promise.all(
+        toUpdate.map((p) =>
+          db.update(schema.players).set({ faceUrl: p.faceUrl }).where(eq(schema.players.apiRef, p.apiRef)),
+        ),
+      );
+    }
+
     revalidatePath('/admin/players');
-    return { imported };
+    return { imported: toInsert.length, updated: toUpdate.length };
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Sync failed.' };
   }
