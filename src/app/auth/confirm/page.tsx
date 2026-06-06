@@ -6,18 +6,29 @@ import { createClient } from '@/lib/supabase/client';
 
 /**
  * Handles implicit-flow auth redirects (tokens in URL hash fragment).
- * Supabase uses implicit flow for admin-generated magic links.
- * The browser client auto-detects and processes #access_token when getSession() is called.
+ * /auth/callback cannot forward the hash via a server redirect, so it serves
+ * a tiny script that does `window.location.replace('/auth/confirm' + hash)`.
+ * This page then explicitly reads the hash and calls setSession().
  */
 export default function ConfirmPage() {
   const router = useRouter();
 
   useEffect(() => {
+    const hash = window.location.hash.slice(1);
+    const params = new URLSearchParams(hash);
+    const access_token = params.get('access_token');
+    const refresh_token = params.get('refresh_token');
+
+    if (!access_token || !refresh_token) {
+      router.replace('/login?error=missing_code');
+      return;
+    }
+
     const supabase = createClient();
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session) {
-        router.replace('/login?error=missing_code');
+    supabase.auth.setSession({ access_token, refresh_token }).then(async ({ data: { session }, error }) => {
+      if (error || !session) {
+        router.replace('/login?error=auth');
         return;
       }
 

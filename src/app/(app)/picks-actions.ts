@@ -1,7 +1,12 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { lockTimeMs, GOAL_BUCKETS } from '@/lib/predictions';
+import {
+  lockTimeMs,
+  GOAL_BUCKETS,
+  normalizePrediction,
+  type GoalBucket,
+} from '@/lib/predictions';
 
 type SaveInput = {
   matchId: number;
@@ -39,10 +44,19 @@ export async function savePrediction(input: SaveInput): Promise<{ error: string 
   }
 
   // Light validation — partial predictions are allowed.
-  const bucket =
+  const rawBucket =
     input.firstGoalBucket && (GOAL_BUCKETS as readonly string[]).includes(input.firstGoalBucket)
-      ? input.firstGoalBucket
+      ? (input.firstGoalBucket as GoalBucket)
       : null;
+
+  // Enforce the score's logical constraints server-side so a crafted client can
+  // never store an impossible prediction (e.g. a 0-0 with a first scorer set).
+  const { firstScoringTeam, firstGoalBucket: bucket } = normalizePrediction({
+    scoreA: input.scoreA,
+    scoreB: input.scoreB,
+    firstScoringTeam: input.firstScoringTeam,
+    firstGoalBucket: rawBucket,
+  });
 
   // The MOTM pick must be a player on one of the two teams in this match.
   let motmPlayerId: number | null = null;
@@ -64,7 +78,7 @@ export async function savePrediction(input: SaveInput): Promise<{ error: string 
       match_id: input.matchId,
       score_a: input.scoreA,
       score_b: input.scoreB,
-      first_scoring_team: input.firstScoringTeam,
+      first_scoring_team: firstScoringTeam,
       first_goal_bucket: bucket,
       motm_player_id: motmPlayerId,
       booster_applied: input.boosterApplied,

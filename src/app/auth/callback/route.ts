@@ -13,9 +13,15 @@ export async function GET(request: Request) {
   const next = searchParams.get('next') ?? '/';
 
   if (!code) {
-    // No PKCE code — Supabase may have used implicit flow (tokens in URL hash).
-    // Redirect to the client-side confirm page which can read the hash fragment.
-    return NextResponse.redirect(`${origin}/auth/confirm`);
+    // No PKCE code — Supabase used implicit flow (tokens in URL hash fragment).
+    // Server-side 307 redirects strip the hash, so serve a tiny HTML page that
+    // forwards the hash to /auth/confirm via client-side navigation instead.
+    return new Response(
+      `<!doctype html><html><head><meta charset="utf-8">
+<script>window.location.replace('/auth/confirm'+window.location.hash);</script>
+</head><body></body></html>`,
+      { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } },
+    );
   }
 
   const supabase = await createClient();

@@ -90,6 +90,15 @@ export const leagueSettings = pgTable(
   {
     id: boolean('id').primaryKey().default(true),
     boosterTotal: integer('booster_total').notNull().default(5),
+    // Configurable scoring weights (defaults from SPEC §6). The scoring engine
+    // (finalize_match_day) reads these so admins can retune points per component.
+    outcomePts: integer('outcome_pts').notNull().default(3),
+    homeGoalsPts: integer('home_goals_pts').notNull().default(2),
+    awayGoalsPts: integer('away_goals_pts').notNull().default(2),
+    goalDiffPts: integer('goal_diff_pts').notNull().default(3),
+    firstTeamPts: integer('first_team_pts').notNull().default(2),
+    firstMinutePts: integer('first_minute_pts').notNull().default(8),
+    motmPts: integer('motm_pts').notNull().default(4),
     status: leagueStatus('status').notNull().default('active'),
     finalizedAt: timestamp('finalized_at', { withTimezone: true }),
   },

@@ -67,6 +67,14 @@ create table admins (
 create table league_settings (
   id            boolean primary key default true check (id),   -- singleton guard
   booster_total integer not null default 5,
+  -- configurable scoring weights, edited at /admin/settings; read by finalize_match_day (§8)
+  outcome_pts       integer not null default 3,
+  home_goals_pts    integer not null default 2,
+  away_goals_pts    integer not null default 2,
+  goal_diff_pts     integer not null default 3,
+  first_team_pts    integer not null default 2,
+  first_minute_pts  integer not null default 8,
+  motm_pts          integer not null default 4,
   status        league_status not null default 'active',
   finalized_at  timestamptz
 );
@@ -338,15 +346,19 @@ Other policies (sketch):
 At match-day finalize, for each prediction vs `match_results`, compute and store the
 per-component points in `prediction_scores`:
 
-| Component | Condition | Pts |
-|---|---|---|
-| outcome | predicted win/draw/loss matches actual | 3 |
-| home goals | `score_a` == actual `score_a` | 2 |
-| away goals | `score_b` == actual `score_b` | 2 |
-| goal diff | `(score_a - score_b)` == actual diff | 3 |
-| first team | `first_scoring_team` matches | 2 |
-| first minute | `first_goal_bucket` matches | 8 |
-| MOTM | `motm_player_id` matches | 4 |
+Point weights are **configurable** via `league_settings` (defaults below, editable at
+`/admin/settings`); `finalize_match_day` reads them at finalize time, so re-finalizing a
+day re-scores it with the current weights.
+
+| Component | Condition | `league_settings` column | Default |
+|---|---|---|---|
+| outcome | predicted win/draw/loss matches actual | `outcome_pts` | 3 |
+| home goals | `score_a` == actual `score_a` | `home_goals_pts` | 2 |
+| away goals | `score_b` == actual `score_b` | `away_goals_pts` | 2 |
+| goal diff | `(score_a - score_b)` == actual diff | `goal_diff_pts` | 3 |
+| first team | `first_scoring_team` matches | `first_team_pts` | 2 |
+| first minute | `first_goal_bucket` matches | `first_minute_pts` | 8 |
+| MOTM | `motm_player_id` matches | `motm_pts` | 4 |
 
 `final_total = base_total * (booster_applied ? 2 : 1)`. Null prediction components
 score 0 (partial predictions). After all matches in the day are scored, recompute

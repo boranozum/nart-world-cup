@@ -43,6 +43,13 @@
       "when": 1780733201287,
       "tag": "0005_safe_colossus",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1780736558139,
+      "tag": "0006_handy_psylocke",
+      "breakpoints": true
     }
   ]
 }
