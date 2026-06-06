@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { eq, or } from 'drizzle-orm';
 import { db, schema } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin/session';
+import { getSportsAdapter } from '@/lib/api';
 
 export async function updateTeam(formData: FormData): Promise<{ error: string } | void> {
   await requireAdmin();
@@ -29,6 +30,46 @@ export async function createTeam(formData: FormData) {
 
   await db.insert(schema.teams).values({ name, shortName, badgeUrl });
   revalidatePath('/admin/teams');
+}
+
+export async function importTeamsFromApi(): Promise<
+  { imported: number; updated: number } | { error: string }
+> {
+  await requireAdmin();
+  try {
+    const adapter = getSportsAdapter();
+    const teams = await adapter.fetchTeams();
+
+    let imported = 0;
+    let updated = 0;
+    for (const t of teams) {
+      const [existing] = await db
+        .select({ id: schema.teams.id })
+        .from(schema.teams)
+        .where(eq(schema.teams.apiRef, t.apiRef))
+        .limit(1);
+
+      if (existing) {
+        await db
+          .update(schema.teams)
+          .set({ name: t.name, shortName: t.shortName ?? null, badgeUrl: t.badgeUrl ?? null })
+          .where(eq(schema.teams.id, existing.id));
+        updated++;
+      } else {
+        await db.insert(schema.teams).values({
+          name: t.name,
+          shortName: t.shortName ?? null,
+          badgeUrl: t.badgeUrl ?? null,
+          apiRef: t.apiRef,
+        });
+        imported++;
+      }
+    }
+    revalidatePath('/admin/teams');
+    return { imported, updated };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'Import failed.' };
+  }
 }
 
 export async function deleteTeam(formData: FormData): Promise<{ error: string } | void> {

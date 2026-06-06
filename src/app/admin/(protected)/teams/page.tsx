@@ -5,14 +5,20 @@ import { ConfirmActionButton } from '@/components/confirm-action-button';
 import { EditTeamRow } from './edit-team-row';
 
 import { createTeam, deleteTeam } from './actions';
+import { ImportTeamsButton } from './import-teams-button';
 
 export default async function TeamsPage() {
   const teams = await db.select().from(schema.teams).orderBy(asc(schema.teams.id));
 
   return (
     <div className="max-w-3xl">
-      <h1 className="font-display text-3xl font-extrabold uppercase tracking-tight">Teams</h1>
-      <p className="mt-1 text-muted-foreground">Add teams as the tournament needs them.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-3xl font-extrabold uppercase tracking-tight">Teams</h1>
+          <p className="mt-1 text-muted-foreground">Add teams manually or import all WC 2026 teams from the API.</p>
+        </div>
+        <ImportTeamsButton />
+      </div>
 
       <form
         action={createTeam}

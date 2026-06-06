@@ -11,6 +11,7 @@ import type { GoalBucket } from '@/lib/predictions';
 import { AddMatchForm } from './add-match-form';
 import { ConcludeMatchForm, type ExistingResult, type ResultPlayer } from './conclude-match-form';
 import { FinalizeControls } from './finalize-controls';
+import { ImportFixturesForm } from './import-fixtures-form';
 import { deleteMatch } from '../actions';
 
 export default async function MatchDayDetailPage({
@@ -102,8 +103,19 @@ export default async function MatchDayDetailPage({
       </div>
 
       {matchDay.status !== 'finalized' && (
-        <div className="mt-6">
-          <AddMatchForm matchDayId={id} teams={teams} />
+        <div className="mt-6 space-y-4">
+          <div>
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Import fixtures from API
+            </p>
+            <ImportFixturesForm matchDayId={id} />
+          </div>
+          <div>
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Add match manually
+            </p>
+            <AddMatchForm matchDayId={id} teams={teams} />
+          </div>
         </div>
       )}
 

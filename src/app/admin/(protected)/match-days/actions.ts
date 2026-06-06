@@ -1,10 +1,109 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { and, eq, ne, sql } from 'drizzle-orm';
+import { and, eq, isNotNull, ne, sql } from 'drizzle-orm';
 import { db, schema } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin/session';
 import { GOAL_BUCKETS } from '@/lib/predictions';
+import { getSportsAdapter } from '@/lib/api';
+import type { FirstScoringTeam as CanonicalFST, GoalMinuteBucket } from '@/lib/api/types';
+
+/** Pull WC fixtures for a date range and insert them into a match day. */
+export async function importFixturesFromApi(formData: FormData): Promise<
+  { imported: number; skipped: number } | { error: string }
+> {
+  await requireAdmin();
+  const matchDayId = Number(formData.get('matchDayId'));
+  const fromDate = String(formData.get('fromDate') ?? '').trim();
+  const toDate = String(formData.get('toDate') ?? '').trim();
+  if (!matchDayId || !fromDate || !toDate) return { error: 'Fill in both dates.' };
+
+  try {
+    const adapter = getSportsAdapter();
+    const fixtures = await adapter.fetchMatches({ fromUtc: fromDate, toUtc: toDate });
+
+    const allTeams = await db
+      .select({ id: schema.teams.id, apiRef: schema.teams.apiRef })
+      .from(schema.teams)
+      .where(isNotNull(schema.teams.apiRef));
+    const teamByRef = new Map(allTeams.map((t) => [t.apiRef!, t.id]));
+
+    let imported = 0;
+    let skipped = 0;
+    const missing = new Set<string>();
+
+    for (const f of fixtures) {
+      const teamAId = teamByRef.get(f.homeTeamApiRef);
+      const teamBId = teamByRef.get(f.awayTeamApiRef);
+      if (!teamAId || !teamBId) {
+        missing.add(f.homeTeamApiRef);
+        missing.add(f.awayTeamApiRef);
+        skipped++;
+        continue;
+      }
+
+      // Skip duplicates (same apiRef already in any match day).
+      const [dup] = await db
+        .select({ id: schema.matches.id })
+        .from(schema.matches)
+        .where(eq(schema.matches.apiRef, f.apiRef))
+        .limit(1);
+      if (dup) { skipped++; continue; }
+
+      await db.insert(schema.matches).values({
+        matchDayId,
+        teamAId,
+        teamBId,
+        kickoffUtc: new Date(f.kickoffUtc),
+        apiRef: f.apiRef,
+      });
+      imported++;
+    }
+
+    revalidatePath(`/admin/match-days/${matchDayId}`);
+    if (missing.size > 0) {
+      return {
+        error: `Imported ${imported}, skipped ${skipped}. Unknown API team refs (import teams first): ${[...missing].join(', ')}`,
+      };
+    }
+    return { imported, skipped };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'Import failed.' };
+  }
+}
+
+/** Fetch a finished match result from the API so the admin can review before saving. */
+export async function fetchMatchResultFromApi(matchId: number): Promise<
+  | { scoreA: number; scoreB: number; firstScoringTeam: CanonicalFST; firstGoalBucket: GoalMinuteBucket }
+  | { error: string }
+> {
+  await requireAdmin();
+  const [match] = await db
+    .select({ apiRef: schema.matches.apiRef })
+    .from(schema.matches)
+    .where(eq(schema.matches.id, matchId))
+    .limit(1);
+
+  if (!match?.apiRef) {
+    return { error: 'This match has no API reference — import it via "Import fixtures" or set the ref manually.' };
+  }
+
+  try {
+    const adapter = getSportsAdapter();
+    const result = await adapter.fetchMatchResult(match.apiRef);
+    if (!result) {
+      return { error: 'Match result not available yet — the API may not have finalised it.' };
+    }
+    return {
+      scoreA: result.scoreA,
+      scoreB: result.scoreB,
+      firstScoringTeam: result.firstScoringTeam,
+      firstGoalBucket: result.firstGoalBucket as GoalBucket,
+    };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'API fetch failed.' };
+  }
+}
 
 export async function createMatchDay(formData: FormData) {
   await requireAdmin();

@@ -3,6 +3,7 @@ import { asc, eq } from 'drizzle-orm';
 import { db, schema } from '@/lib/db';
 import { PlayerRow, type AdminPlayer } from './player-row';
 import { createPlayer } from './actions';
+import { SyncSquadsButton } from './sync-squads-button';
 
 const inputCls =
   'w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:border-primary';
@@ -30,10 +31,15 @@ export default async function PlayersPage() {
 
   return (
     <div className="max-w-3xl">
-      <h1 className="font-display text-3xl font-extrabold uppercase tracking-tight">Players</h1>
-      <p className="mt-1 text-muted-foreground">
-        Add players to teams. They become selectable as man of the match.
-      </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-3xl font-extrabold uppercase tracking-tight">Players</h1>
+          <p className="mt-1 text-muted-foreground">
+            Add players manually or sync full squads from the API (requires teams to be imported first).
+          </p>
+        </div>
+        <SyncSquadsButton />
+      </div>
 
       {teams.length === 0 ? (
         <p className="mt-6 rounded-xl border border-dashed border-border bg-card/50 p-6 text-center text-sm text-muted-foreground">

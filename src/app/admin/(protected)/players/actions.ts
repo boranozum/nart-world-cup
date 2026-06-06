@@ -1,14 +1,57 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { eq } from 'drizzle-orm';
+import { eq, isNotNull } from 'drizzle-orm';
 import { db, schema } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin/session';
+import { getSportsAdapter } from '@/lib/api';
 
 // A raw image URL never contains spaces; pasted ones often pick up stray
 // whitespace that silently breaks the image. Strip it (mirrors team badges).
 function cleanUrl(value: FormDataEntryValue | null): string | null {
   return String(value ?? '').replace(/\s+/g, '') || null;
+}
+
+export async function syncSquadsFromApi(): Promise<
+  { imported: number } | { error: string }
+> {
+  await requireAdmin();
+  try {
+    const teams = await db
+      .select({ id: schema.teams.id, apiRef: schema.teams.apiRef })
+      .from(schema.teams)
+      .where(isNotNull(schema.teams.apiRef));
+
+    if (teams.length === 0) {
+      return { error: 'No teams with API references found. Import teams from the API first.' };
+    }
+
+    const adapter = getSportsAdapter();
+    let imported = 0;
+
+    for (const team of teams) {
+      const players = await adapter.fetchPlayers(team.apiRef!);
+      for (const p of players) {
+        const [existing] = await db
+          .select({ id: schema.players.id })
+          .from(schema.players)
+          .where(eq(schema.players.apiRef, p.apiRef))
+          .limit(1);
+        if (!existing) {
+          await db.insert(schema.players).values({
+            name: p.name,
+            teamId: team.id,
+            apiRef: p.apiRef,
+          });
+          imported++;
+        }
+      }
+    }
+    revalidatePath('/admin/players');
+    return { imported };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'Sync failed.' };
+  }
 }
 
 export async function createPlayer(formData: FormData) {

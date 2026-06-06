@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { CheckCircle2, Pencil, X } from 'lucide-react';
+import { CheckCircle2, Download, Pencil, X } from 'lucide-react';
 import { GOAL_BUCKETS, goalBucketLabel, type GoalBucket } from '@/lib/predictions';
 import { ConfirmDialog } from '@/components/confirm-dialog';
-import { concludeMatch, reopenMatch } from '../actions';
+import { concludeMatch, fetchMatchResultFromApi, reopenMatch } from '../actions';
 
 export type ResultPlayer = { id: number; name: string; side: 'A' | 'B' };
 
@@ -45,6 +45,36 @@ export function ConcludeMatchForm({
   const [error, setError] = useState<string | null>(null);
   const [confirmingClear, setConfirmingClear] = useState(false);
   const [pending, startTransition] = useTransition();
+  const [pulling, startPullTransition] = useTransition();
+  const [pullError, setPullError] = useState<string | null>(null);
+
+  // Controlled state for all result fields so the API pull can pre-fill them.
+  const [scoreA, setScoreA] = useState(result?.scoreA?.toString() ?? '');
+  const [scoreB, setScoreB] = useState(result?.scoreB?.toString() ?? '');
+  const [firstScoringTeam, setFirstScoringTeam] = useState<'A' | 'B' | 'none'>(
+    result?.firstScoringTeam ?? 'A',
+  );
+  const [firstGoalBucket, setFirstGoalBucket] = useState<GoalBucket>(
+    result?.firstGoalBucket ?? '0-10',
+  );
+  const [motmPlayerId, setMotmPlayerId] = useState<string>(
+    result?.motmPlayerId?.toString() ?? '',
+  );
+
+  function pullFromApi() {
+    setPullError(null);
+    startPullTransition(async () => {
+      const res = await fetchMatchResultFromApi(matchId);
+      if ('error' in res) {
+        setPullError(res.error);
+        return;
+      }
+      setScoreA(String(res.scoreA));
+      setScoreB(String(res.scoreB));
+      setFirstScoringTeam(res.firstScoringTeam);
+      setFirstGoalBucket(res.firstGoalBucket);
+    });
+  }
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -71,7 +101,6 @@ export function ConcludeMatchForm({
     });
   }
 
-  // Collapsed view: a summary plus the trigger to edit (or just a read-only badge when locked).
   if (!open) {
     return (
       <div className="flex items-center gap-2">
@@ -100,6 +129,25 @@ export function ConcludeMatchForm({
 
   return (
     <form onSubmit={onSubmit} className="mt-2 grid gap-3 rounded-lg border border-border bg-background/60 p-4">
+      {/* Pull from API */}
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          disabled={pulling}
+          onClick={pullFromApi}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium transition hover:bg-muted disabled:opacity-60"
+        >
+          <Download className="size-3.5" />
+          {pulling ? 'Pulling…' : 'Pull from API'}
+        </button>
+        {pullError && <span className="text-xs text-danger">{pullError}</span>}
+        {!pullError && !pulling && (
+          <span className="text-xs text-muted-foreground">
+            Pre-fills score, first scorer &amp; minute. MOTM must be entered manually.
+          </span>
+        )}
+      </div>
+
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className={labelCls}>{teamAName}</label>
@@ -108,7 +156,8 @@ export function ConcludeMatchForm({
             type="number"
             min={0}
             required
-            defaultValue={result?.scoreA ?? ''}
+            value={scoreA}
+            onChange={(e) => setScoreA(e.target.value)}
             className={inputCls}
           />
         </div>
@@ -119,7 +168,8 @@ export function ConcludeMatchForm({
             type="number"
             min={0}
             required
-            defaultValue={result?.scoreB ?? ''}
+            value={scoreB}
+            onChange={(e) => setScoreB(e.target.value)}
             className={inputCls}
           />
         </div>
@@ -128,7 +178,12 @@ export function ConcludeMatchForm({
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className={labelCls}>First to score</label>
-          <select name="firstScoringTeam" defaultValue={result?.firstScoringTeam ?? 'A'} className={inputCls}>
+          <select
+            name="firstScoringTeam"
+            value={firstScoringTeam}
+            onChange={(e) => setFirstScoringTeam(e.target.value as 'A' | 'B' | 'none')}
+            className={inputCls}
+          >
             <option value="A">{teamAName}</option>
             <option value="B">{teamBName}</option>
             <option value="none">No goals (0–0)</option>
@@ -136,7 +191,12 @@ export function ConcludeMatchForm({
         </div>
         <div>
           <label className={labelCls}>First goal minute</label>
-          <select name="firstGoalBucket" defaultValue={result?.firstGoalBucket ?? '0-10'} className={inputCls}>
+          <select
+            name="firstGoalBucket"
+            value={firstGoalBucket}
+            onChange={(e) => setFirstGoalBucket(e.target.value as GoalBucket)}
+            className={inputCls}
+          >
             {GOAL_BUCKETS.map((b) => (
               <option key={b} value={b}>
                 {goalBucketLabel(b)}
@@ -148,7 +208,12 @@ export function ConcludeMatchForm({
 
       <div>
         <label className={labelCls}>Man of the match (optional)</label>
-        <select name="motmPlayerId" defaultValue={result?.motmPlayerId ?? ''} className={inputCls}>
+        <select
+          name="motmPlayerId"
+          value={motmPlayerId}
+          onChange={(e) => setMotmPlayerId(e.target.value)}
+          className={inputCls}
+        >
           <option value="">— none —</option>
           {players.map((p) => (
             <option key={p.id} value={p.id}>
