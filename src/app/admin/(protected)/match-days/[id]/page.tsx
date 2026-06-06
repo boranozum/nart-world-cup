@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { asc, eq, inArray } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Trash2 } from 'lucide-react';
 import { db, schema } from '@/lib/db';
 import { PHASE_LABELS } from '@/lib/tournament';
 import { LocalTime } from '@/components/local-time';
@@ -140,6 +140,13 @@ export default async function MatchDayDetailPage({
                         <LocalTime iso={m.kickoffUtc.toISOString()} /> · {m.status}
                       </p>
                     </div>
+                    <Link
+                      href={`/admin/matches/${m.id}`}
+                      className="flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                    >
+                      <ExternalLink className="size-3.5" />
+                      Moderate
+                    </Link>
                     {matchDay.status !== 'finalized' && (
                       <ConfirmActionButton
                         action={deleteMatch}

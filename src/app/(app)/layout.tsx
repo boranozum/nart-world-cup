@@ -1,5 +1,6 @@
 import { TopBar } from '@/components/shell/top-bar';
 import { BottomTabs } from '@/components/shell/bottom-tabs';
+import { FinalizeAnimationShell } from '@/components/finalize-animation-shell';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -9,6 +10,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
       <BottomTabs />
+      <FinalizeAnimationShell />
     </div>
   );
 }
