@@ -11,6 +11,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   domain: `Only @${ALLOWED_DOMAIN} accounts can sign in.`,
   auth: 'Sign-in failed. Please try again.',
   missing_code: 'Sign-in was interrupted. Please try again.',
+  blocked: 'Your account has been blocked. Please contact an administrator.',
 };
 
 function LoginContent() {
