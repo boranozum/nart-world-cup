@@ -1,0 +1,10 @@
+.git
+.gitignore
+.github
+node_modules
+.next
+.env*
+!.env.example
+drizzle/
+scripts/
+*.md
