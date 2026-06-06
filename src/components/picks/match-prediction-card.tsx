@@ -8,11 +8,13 @@ import { LocalTime } from '@/components/local-time';
 import { TeamBadge } from '@/components/team-badge';
 import { PlayerSelect, type SelectablePlayer } from '@/components/picks/player-select';
 import {
+  DEFAULT_SCORING_PTS,
   GOAL_BUCKETS,
   goalBucketLabel,
   lockTimeMs,
   predictionConstraints,
   type FirstScoringTeam,
+  type ScoringPts,
 } from '@/lib/predictions';
 
 export type CardTeam = { id: number; name: string; shortName: string | null; badgeUrl?: string | null };
@@ -66,6 +68,7 @@ export function MatchPredictionCard({
   players,
   initial,
   boostersRemaining,
+  scoringPts = DEFAULT_SCORING_PTS,
 }: {
   matchId: number;
   kickoffUtc: string;
@@ -74,6 +77,7 @@ export function MatchPredictionCard({
   players: SelectablePlayer[];
   initial: CardPrediction | null;
   boostersRemaining: number;
+  scoringPts?: ScoringPts;
 }) {
   const [scoreA, setScoreA] = useState<string>(initial?.scoreA?.toString() ?? '');
   const [scoreB, setScoreB] = useState<string>(initial?.scoreB?.toString() ?? '');
@@ -175,12 +179,15 @@ export function MatchPredictionCard({
         <p className="mb-3 flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
           Score
           <InfoTooltip position="below">
-            <PtsRow label="Outcome (W/D/L)" pts={3} />
-            <PtsRow label="Home goals exact" pts={2} />
-            <PtsRow label="Away goals exact" pts={2} />
-            <PtsRow label="Goal difference" pts={3} />
+            <PtsRow label="Outcome (W/D/L)" pts={scoringPts.outcomePts} />
+            <PtsRow label="Home goals exact" pts={scoringPts.homeGoalsPts} />
+            <PtsRow label="Away goals exact" pts={scoringPts.awayGoalsPts} />
+            <PtsRow label="Goal difference" pts={scoringPts.goalDiffPts} />
             <div className="mt-1.5 border-t border-border/60 pt-1.5">
-              <PtsRow label="Max from score" pts={10} />
+              <PtsRow
+                label="Max from score"
+                pts={scoringPts.outcomePts + scoringPts.homeGoalsPts + scoringPts.awayGoalsPts + scoringPts.goalDiffPts}
+              />
             </div>
           </InfoTooltip>
         </p>
@@ -219,7 +226,7 @@ export function MatchPredictionCard({
           <p className="mb-1.5 flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
             First to score
             <InfoTooltip>
-              <PtsRow label="Correct team / No goal" pts={2} />
+              <PtsRow label="Correct team / No goal" pts={scoringPts.firstTeamPts} />
             </InfoTooltip>
           </p>
           <div className="grid grid-cols-3 gap-2">
@@ -244,7 +251,7 @@ export function MatchPredictionCard({
           <p className="mb-1.5 flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
             First goal minute
             <InfoTooltip>
-              <PtsRow label="Correct 10-min bucket" pts={8} />
+              <PtsRow label="Correct 10-min bucket" pts={scoringPts.firstMinutePts} />
               <p className="mt-1.5 border-t border-border/60 pt-1.5 text-popover-foreground/60">
                 e.g. "21–30'" means the first goal fell in that window.
               </p>
@@ -273,7 +280,7 @@ export function MatchPredictionCard({
           <p className="mb-1.5 flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Man of the match
             <InfoTooltip>
-              <PtsRow label="Correct player" pts={4} />
+              <PtsRow label="Correct player" pts={scoringPts.motmPts} />
             </InfoTooltip>
           </p>
           {players.length === 0 ? (

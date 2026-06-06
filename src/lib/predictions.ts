@@ -1,3 +1,24 @@
+/** Point values for each scoring component, mirroring league_settings columns. */
+export type ScoringPts = {
+  outcomePts: number;
+  homeGoalsPts: number;
+  awayGoalsPts: number;
+  goalDiffPts: number;
+  firstTeamPts: number;
+  firstMinutePts: number;
+  motmPts: number;
+};
+
+export const DEFAULT_SCORING_PTS: ScoringPts = {
+  outcomePts: 3,
+  homeGoalsPts: 2,
+  awayGoalsPts: 2,
+  goalDiffPts: 3,
+  firstTeamPts: 2,
+  firstMinutePts: 8,
+  motmPts: 4,
+};
+
 export const GOAL_BUCKETS = [
   '0-10',
   '11-20',

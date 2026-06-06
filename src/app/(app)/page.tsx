@@ -7,7 +7,7 @@ import {
   type CardTeam,
 } from '@/components/picks/match-prediction-card';
 import type { SelectablePlayer } from '@/components/picks/player-select';
-import type { FirstScoringTeam } from '@/lib/predictions';
+import { DEFAULT_SCORING_PTS, type FirstScoringTeam, type ScoringPts } from '@/lib/predictions';
 
 function EmptyState({ title, body }: { title: string; body: string }) {
   return (
@@ -81,7 +81,10 @@ export default async function PicksPage() {
         .select('match_id, score_a, score_b, first_scoring_team, first_goal_bucket, motm_player_id, booster_applied')
         .eq('user_id', user!.id)
         .in('match_id', matchIds),
-      supabase.from('league_settings').select('booster_total').maybeSingle(),
+      supabase
+        .from('league_settings')
+        .select('booster_total, outcome_pts, home_goals_pts, away_goals_pts, goal_diff_pts, first_team_pts, first_minute_pts, motm_pts')
+        .maybeSingle(),
       supabase
         .from('predictions')
         .select('id', { count: 'exact', head: true })
@@ -118,6 +121,15 @@ export default async function PicksPage() {
 
   const boosterTotal = settings?.booster_total ?? 5;
   const boostersRemaining = Math.max(0, boosterTotal - (boostersUsed ?? 0));
+  const scoringPts: ScoringPts = {
+    outcomePts: settings?.outcome_pts ?? DEFAULT_SCORING_PTS.outcomePts,
+    homeGoalsPts: settings?.home_goals_pts ?? DEFAULT_SCORING_PTS.homeGoalsPts,
+    awayGoalsPts: settings?.away_goals_pts ?? DEFAULT_SCORING_PTS.awayGoalsPts,
+    goalDiffPts: settings?.goal_diff_pts ?? DEFAULT_SCORING_PTS.goalDiffPts,
+    firstTeamPts: settings?.first_team_pts ?? DEFAULT_SCORING_PTS.firstTeamPts,
+    firstMinutePts: settings?.first_minute_pts ?? DEFAULT_SCORING_PTS.firstMinutePts,
+    motmPts: settings?.motm_pts ?? DEFAULT_SCORING_PTS.motmPts,
+  };
 
   return (
     <section>
@@ -155,6 +167,7 @@ export default async function PicksPage() {
               players={matchPlayers}
               initial={predMap.get(m.id) ?? null}
               boostersRemaining={boostersRemaining}
+              scoringPts={scoringPts}
             />
           );
         })}
