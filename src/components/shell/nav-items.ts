@@ -1,4 +1,4 @@
-import { Goal, Trophy, User, type LucideIcon } from 'lucide-react';
+import { CalendarDays, Goal, Trophy, User, type LucideIcon } from 'lucide-react';
 
 export type NavItem = { href: string; label: string; icon: LucideIcon };
 
@@ -6,6 +6,7 @@ export type NavItem = { href: string; label: string; icon: LucideIcon };
 export const NAV_ITEMS: NavItem[] = [
   { href: '/', label: 'Picks', icon: Goal },
   { href: '/league', label: 'League', icon: Trophy },
+  { href: '/match-days', label: 'Match Days', icon: CalendarDays },
   { href: '/me', label: 'Me', icon: User },
 ];
 

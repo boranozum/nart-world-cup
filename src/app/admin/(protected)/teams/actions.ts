@@ -5,6 +5,19 @@ import { eq, or } from 'drizzle-orm';
 import { db, schema } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin/session';
 
+export async function updateTeam(formData: FormData): Promise<{ error: string } | void> {
+  await requireAdmin();
+  const id = Number(formData.get('id'));
+  if (!id) return;
+  const name = String(formData.get('name') ?? '').trim();
+  if (!name) return { error: 'Name is required.' };
+  const shortName = String(formData.get('shortName') ?? '').trim() || null;
+  const badgeUrl = String(formData.get('badgeUrl') ?? '').replace(/\s+/g, '') || null;
+
+  await db.update(schema.teams).set({ name, shortName, badgeUrl }).where(eq(schema.teams.id, id));
+  revalidatePath('/admin/teams');
+}
+
 export async function createTeam(formData: FormData) {
   await requireAdmin();
   const name = String(formData.get('name') ?? '').trim();
