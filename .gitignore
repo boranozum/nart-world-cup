@@ -20,6 +20,9 @@
 # production
 /build
 
+# local git worktrees (kept inside the repo root)
+/worktrees/
+
 # misc
 .DS_Store
 *.pem
