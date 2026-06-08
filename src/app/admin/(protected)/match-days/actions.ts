@@ -116,6 +116,26 @@ export async function createMatchDay(formData: FormData) {
   revalidatePath('/admin/match-days');
 }
 
+/** Delete a match day (and its matches) — only allowed while still a draft. */
+export async function deleteMatchDay(formData: FormData): Promise<{ error: string } | void> {
+  await requireAdmin();
+  const id = Number(formData.get('id'));
+  if (!id) return;
+
+  const [matchDay] = await db
+    .select({ status: schema.matchDays.status })
+    .from(schema.matchDays)
+    .where(eq(schema.matchDays.id, id))
+    .limit(1);
+  if (!matchDay) return;
+  if (matchDay.status !== 'draft') {
+    return { error: 'Only draft match days can be deleted.' };
+  }
+
+  await db.delete(schema.matchDays).where(eq(schema.matchDays.id, id));
+  revalidatePath('/admin/match-days');
+}
+
 export async function activateMatchDay(formData: FormData): Promise<{ error: string } | void> {
   await requireAdmin();
   const id = Number(formData.get('id'));
@@ -150,6 +170,26 @@ export async function createMatch(formData: FormData): Promise<{ error: string }
     teamBId,
     kickoffUtc: new Date(kickoffIso),
   });
+  revalidatePath(`/admin/match-days/${matchDayId}`);
+}
+
+/** Remove every match from a draft match day (e.g. to re-import fixtures cleanly). */
+export async function resetMatches(formData: FormData): Promise<{ error: string } | void> {
+  await requireAdmin();
+  const matchDayId = Number(formData.get('matchDayId'));
+  if (!matchDayId) return;
+
+  const [matchDay] = await db
+    .select({ status: schema.matchDays.status })
+    .from(schema.matchDays)
+    .where(eq(schema.matchDays.id, matchDayId))
+    .limit(1);
+  if (!matchDay) return;
+  if (matchDay.status !== 'draft') {
+    return { error: 'Only draft match days can have their matches reset.' };
+  }
+
+  await db.delete(schema.matches).where(eq(schema.matches.matchDayId, matchDayId));
   revalidatePath(`/admin/match-days/${matchDayId}`);
 }
 
