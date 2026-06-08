@@ -50,6 +50,13 @@
       "when": 1780736558139,
       "tag": "0006_handy_psylocke",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1780925554320,
+      "tag": "0007_wise_brother_voodoo",
+      "breakpoints": true
     }
   ]
 }

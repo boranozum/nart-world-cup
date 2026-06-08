@@ -52,15 +52,28 @@ export async function completeOnboarding(
     avatarUrl = `${pub.publicUrl}?v=${Date.now()}`;
   }
 
+  const now = new Date().toISOString();
   const { error } = await supabase
     .from('profiles')
-    .update({ username, avatar_url: avatarUrl, onboarded_at: new Date().toISOString() })
+    .update({
+      username,
+      avatar_url: avatarUrl,
+      onboarded_at: now,
+      disclaimer_accepted_at: now,
+    })
     .eq('id', user.id);
 
   if (error) {
     if (error.code === '23505') return { error: 'That username is already taken.' };
     return { error: 'Could not save your profile. Please try again.' };
   }
+
+  // Mirrors the `blocked` flag: stored in auth metadata so the proxy can
+  // gate every request for the no-real-money disclaimer without a DB query.
+  const admin = createAdminClient();
+  await admin.auth.admin.updateUserById(user.id, {
+    app_metadata: { disclaimer_accepted: true },
+  });
 
   redirect('/');
 }

@@ -74,6 +74,20 @@ export async function proxy(request: NextRequest) {
       url.search = '?reason=blocked';
       return NextResponse.redirect(url);
     }
+    // app_metadata.disclaimer_accepted is set once the user acknowledges the
+    // no-real-money disclaimer (during onboarding for new users, or on
+    // /disclaimer for existing users who onboarded before it was added).
+    // Checked here — not just at sign-in — so already-logged-in users are
+    // caught too. /onboarding has its own copy of the disclaimer baked in.
+    if (
+      user.app_metadata?.disclaimer_accepted !== true &&
+      pathname !== '/disclaimer' &&
+      pathname !== '/onboarding'
+    ) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/disclaimer';
+      return NextResponse.redirect(url);
+    }
   }
 
   return response;
