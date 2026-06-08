@@ -70,6 +70,7 @@ export const profiles = pgTable('profiles', {
   avatarUrl: text('avatar_url'),
   theme: themePref('theme').notNull().default('system'),
   onboardedAt: timestamp('onboarded_at', { withTimezone: true }),
+  disclaimerAcceptedAt: timestamp('disclaimer_accepted_at', { withTimezone: true }),
   joinedAt: timestamp('joined_at', { withTimezone: true }).notNull().defaultNow(),
   totalPoints: integer('total_points').notNull().default(0),
   blockedAt: timestamp('blocked_at', { withTimezone: true }),

@@ -2,12 +2,20 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Camera, Check, Goal, MessageCircle, X, Zap } from 'lucide-react';
+import { Camera, Check, Goal, MessageCircle, ShieldCheck, X, Zap } from 'lucide-react';
 import { checkUsername, completeOnboarding } from './actions';
 
-type Slide = { icon: typeof Goal; title: string; body: string };
+type Slide = { icon: typeof Goal; title: string; body: string; cta?: string };
 
+// First "slide" is the no-real-money disclaimer — same full-screen treatment
+// as the feature tour, but with its own acknowledgement CTA instead of "Next".
 const SLIDES: Slide[] = [
+  {
+    icon: ShieldCheck,
+    title: 'Before you dive in',
+    body: 'Nart World Cup is a free, points-only prediction game for TechNarts colleagues — leaderboard glory and bragging rights are the only prizes on the line. No real money, prizes, or stakes are involved, and this app must never be used to organize, host, or place real-money bets or wagering pools among colleagues. Standard TechNarts workplace conduct policies apply.',
+    cta: 'I understand and agree',
+  },
   {
     icon: Goal,
     title: 'Predict every match',
@@ -271,7 +279,7 @@ function SlideView({
           disabled={pending}
           className="rounded-full bg-accent px-8 py-3.5 font-semibold text-accent-foreground transition hover:brightness-110 active:scale-[0.99] disabled:opacity-60"
         >
-          {isLast ? (pending ? 'Setting up…' : "Let's go") : 'Next'}
+          {slide.cta ?? (isLast ? (pending ? 'Setting up…' : "Let's go") : 'Next')}
         </button>
       </div>
     </motion.div>

@@ -12,7 +12,7 @@ import { AddMatchForm } from './add-match-form';
 import { ConcludeMatchForm, type ExistingResult, type ResultPlayer } from './conclude-match-form';
 import { FinalizeControls } from './finalize-controls';
 import { ImportFixturesForm } from './import-fixtures-form';
-import { deleteMatch } from '../actions';
+import { deleteMatch, resetMatches } from '../actions';
 
 export default async function MatchDayDetailPage({
   params,
@@ -116,6 +116,24 @@ export default async function MatchDayDetailPage({
             </p>
             <AddMatchForm matchDayId={id} teams={teams} />
           </div>
+        </div>
+      )}
+
+      {matchDay.status === 'draft' && matches.length > 0 && (
+        <div className="mt-6 flex justify-end">
+          <ConfirmActionButton
+            action={resetMatches}
+            fields={{ matchDayId: id }}
+            title="Reset matches"
+            message={`Remove all ${matches.length} match${matches.length === 1 ? '' : 'es'} from "${matchDay.name}"? This also removes any predictions and results for them.`}
+            confirmLabel="Reset"
+            busyLabel="Resetting…"
+            ariaLabel="Reset matches"
+            className="flex items-center gap-1.5 rounded-full border border-danger/30 px-3 py-1.5 text-xs font-medium text-danger transition hover:bg-danger/10"
+          >
+            <Trash2 className="size-3.5" />
+            Reset matches
+          </ConfirmActionButton>
         </div>
       )}
 

@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { asc } from 'drizzle-orm';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Trash2 } from 'lucide-react';
 import { db, schema } from '@/lib/db';
 import { PHASE_LABELS, PHASE_ORDER, type TournamentPhase } from '@/lib/tournament';
-import { createMatchDay } from './actions';
+import { ConfirmActionButton } from '@/components/confirm-action-button';
+import { createMatchDay, deleteMatchDay } from './actions';
 import { ActivateButton } from './activate-button';
 
 const STATUS_STYLES: Record<string, string> = {
@@ -99,6 +100,20 @@ export default async function MatchDaysPage() {
 
               <div className="ml-auto flex items-center gap-2">
                 {md.status === 'draft' && <ActivateButton id={md.id} />}
+                {md.status === 'draft' && (
+                  <ConfirmActionButton
+                    action={deleteMatchDay}
+                    fields={{ id: md.id }}
+                    title="Delete match day"
+                    message={`Delete "${md.name}"? This also removes its matches.`}
+                    confirmLabel="Delete"
+                    busyLabel="Deleting…"
+                    ariaLabel="Delete match day"
+                    className="rounded-md p-1.5 text-muted-foreground transition hover:bg-danger/10 hover:text-danger"
+                  >
+                    <Trash2 className="size-4" />
+                  </ConfirmActionButton>
+                )}
                 <Link
                   href={`/admin/match-days/${md.id}`}
                   className="flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs font-medium transition hover:bg-muted"
