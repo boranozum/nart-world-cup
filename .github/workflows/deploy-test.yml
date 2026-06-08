@@ -31,5 +31,8 @@ jobs:
 
     steps:
       - name: Trigger deployment
-        # Coolify webhook: Settings → Deployments → Deploy Webhook
-        run: curl -fsSL "${{ secrets.TEST_COOLIFY_WEBHOOK }}"
+        # Coolify's /api/v1/deploy endpoint requires a Bearer API token
+        # (Keys & Tokens → API tokens, scoped to "deploy").
+        run: |
+          curl -fsSL "${{ secrets.TEST_COOLIFY_WEBHOOK }}" \
+            -H "Authorization: Bearer ${{ secrets.TEST_COOLIFY_API_TOKEN }}"
